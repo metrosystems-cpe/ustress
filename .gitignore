@@ -12,7 +12,7 @@ _test.go
 glide.lock
 
 # Builds
-docs-*
+trafficmonkey-*
 bindata*
 
 # SiteBuild

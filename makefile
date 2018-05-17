@@ -1,4 +1,4 @@
-BINARY = traefikmonkey
+BINARY = trafficmonkey
 GOARCH = amd64
 
 VERSION?=?
