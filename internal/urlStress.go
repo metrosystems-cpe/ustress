@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +19,11 @@ import (
 
 var (
 	ctx context.Context
+)
+
+const (
+	// HTTPfolder - the folder where the reports will be dumped
+	HTTPfolder = "./data/"
 )
 
 // the structure that will be passed to channels
@@ -161,6 +167,30 @@ func NewURLStressReport(url string, requests, threads int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// os.Stdout.Write(b)
+	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
+	fmt.Fprintf(fileWriter, string(b))
 	return b, nil
+}
+
+// NewFile returns a new file to write data to
+func NewFile(filename string) *os.File {
+
+	CreateDirIfNotExist(HTTPfolder)
+	f, err := os.Create(HTTPfolder + filename)
+	f, err = os.OpenFile(HTTPfolder+filename, os.O_RDWR|os.O_APPEND, 0766) // For read access.
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return f
+}
+
+// CreateDirIfNotExist the function name says it all
+func CreateDirIfNotExist(dir string) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
