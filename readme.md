@@ -1,17 +1,17 @@
 # Traffic Monkey
 
-it is Web application designed to be deployed in various kubernetes clusters from where to start send traffic to an endpoint.
+Web application designed to be deployed in various kubernetes clusters from where to start send traffic to an endpoint.
 
 urlHandlers:
  - /probe          - > send a get request and the monkey will start the atack 
- - /data           - > will expose 
+ - /data           - > http server to report data directory (exposes report files)
  - /.well-known/*  - > live / ready / metrics (no metrics)
 
 
 
 ## Current deployment process 
 
-in order to make it work, you need 2 terminal windows and run a lot of commands :) 
+In order to make it work, you need 2 terminal windows and to run a lot of commands :) 
 
 Warning: if --rm flag (default) is set and all tty's to the kubernetes pod are interupted the pod will be destroyed and with him all the report data
 
