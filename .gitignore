@@ -1,0 +1,19 @@
+# golang
+vendor
+# data
+test.go
+_test.go
+
+# Others
+.DS_STORE
+*.log
+
+# Locks
+glide.lock
+
+# Builds
+docs-*
+bindata*
+
+# SiteBuild
+site
