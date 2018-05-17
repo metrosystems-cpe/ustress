@@ -1,6 +1,6 @@
 # golang
 vendor
-# data
+data
 test.go
 _test.go
 
