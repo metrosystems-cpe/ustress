@@ -3,17 +3,17 @@
 Web application designed to be deployed in various kubernetes clusters from where to start send traffic to an endpoint.
 
 urlHandlers:
- - /probe          - > send a get request and the monkey will start the atack 
+ - /probe          - > send a get request and the monkey will start the attack
  - /data           - > http server to report data directory (exposes report files)
  - /.well-known/*  - > live / ready / metrics (no metrics)
 
 
 
-## Current deployment process 
+## Current deployment process
 
-In order to make it work, you need 2 terminal windows and to run a lot of commands :) 
+In order to make it work, you need 2 terminal windows and to run a lot of commands :)
 
-Warning: if --rm flag (default) is set and all tty's to the kubernetes pod are interupted the pod will be destroyed and with him all the report data
+Warning: if --rm flag (default) is set and all tty's to the kubernetes pod are interrupted the pod will be destroyed and with him all the report data
 
 
 ```
@@ -34,11 +34,11 @@ step 9 kubectl cp sre-shell-300457757-xk08h:/data/ ./data
 
 ```
 
-## analyze generated data. 
+## analyse generated data.
 
-it was designed to generate percentile statistics and not detect 503 ( application code for timout error ) :) 
+it was designed to generate percentile statistics and not detect 503 ( application code for timeout error ) :)
 
-### analyze-data.sh
+### analyse-data.sh
 ```
 find . -type f -name "*.json" | while read file; do \
 printf " >>> file: %s\n" $file; \
@@ -47,3 +47,14 @@ jq '."timestamp"' $file ; \
 jq '."stats"' $file; \
 jq '.["data"]' $file | grep status | sort | uniq -c; done
 ```
+
+### Improvements
+
+- implement gopkg.in/alecthomas/kingpin.v2
+- implement github.com/sirupsen/logrus
+
+3. Probe handler improvement: args insecure, debug
+4. app entrypoint improvement: args insecure, debug
+5. logrus debug
+6. metrics  
+7. save report by posting it to slack
