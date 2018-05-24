@@ -15,6 +15,7 @@ var (
 // URLStress write description
 func URLStress(wr http.ResponseWriter, req *http.Request) {
 	// exampleCall := "?url=http://localhost:9090&requests=20&workers=4"
+	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
 
 	urlPath := req.URL.Query()
 
@@ -24,6 +25,9 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wr.Write([]byte("missing url parameter"))
 		return
 	}
+
+	insecure, _ := strconv.ParseBool(urlPath.Get("insecure"))
+	// fmt.Println(insecure)
 
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
 	if rParam <= 0 {
@@ -39,10 +43,20 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Println(uParam, rParam, wParam)
+	resolve := urlPath.Get("resolve") // @todo validate'it for god sake
 
 	// @todo handle error
-	messages, _ := NewURLStressReport(uParam, rParam, wParam)
+	mk := MonkeyConfig{
+		URL:      uParam,
+		Requests: rParam,
+		Threads:  wParam,
+		Resolve:  resolve,
+		Insecure: insecure,
+	}
+
+	log.Printf("%+v", mk)
+
+	messages, _ := mk.NewURLStressReport()
 	// os.Stdout.Write(messages)
 
 	fmt.Println(string(messages))

@@ -1,9 +1,11 @@
 package internal
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -33,12 +35,28 @@ type message struct {
 	ctx          context.Context
 }
 
+// MonkeyConfig structure
+type MonkeyConfig struct {
+	// URL to probe
+	URL string
+	// Number of request to be sent to the victim
+	Requests int
+	// Ho many treads to be used (dependent on the image resources)
+	Threads int
+	// similar to curl --resolve Force resolve of HOST:PORT to ADDRESS
+	Resolve string
+	// insecure
+	Insecure bool
+}
+
 // Worker details, needed for returning the output and build the report
 type Worker struct {
 	Request  int     `json:"request"`
 	Status   int     `json:"status"`
 	Thread   int     `json:"thread"`
 	url      string  // should use net.url
+	resolve  string  // ip:port
+	insecure bool    // insecure request, does not check the certificate
 	Duration float64 `json:"duration"`
 }
 
@@ -48,6 +66,7 @@ type Report struct {
 	// id uuid
 	// timestamp
 	URL       string    `json:"url"`
+	Resolve   string    `json:"resolve"`
 	TimeStamp time.Time `json:"timestamp"`
 	UUID      uuid.UUID `json:"uuid"`
 	Stats     struct {
@@ -83,22 +102,52 @@ func processMessages(id int, work <-chan *message) {
 
 // doWork method for the worker
 func (wrk *Worker) doWork(id int) *Worker {
+	// every new worker has a new http client.
+
 	start := time.Now()
 	wrk.Thread = id
-	// define a timeout for the http client
-	client := http.Client{
-		Timeout: time.Duration(2 * time.Second),
+
+	// curl -v -k --resolve "idam-pp.metrosystems.net:443:10.29.30.8"  'https://idam-pp.metrosystems.net:443/.well-known/openid-configuration' --insecure
+
+	tr := &http.Transport{}
+
+	// insecure request
+	if wrk.insecure {
+		tr = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
 	}
+
+	dialer := &net.Dialer{
+		Timeout:   2 * time.Second,
+		KeepAlive: 0 * time.Second,
+		DualStack: true,
+	}
+
+	log.Println(wrk.resolve)
+	if wrk.resolve != "" {
+		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return dialer.DialContext(ctx, network, wrk.resolve)
+		}
+	}
+
+	client := http.Client{
+		Timeout:   time.Duration(2 * time.Second),
+		Transport: tr,
+	}
+
 	//httpResponse, error := client.Head(url)
 	httpResponse, error := client.Get(wrk.url)
+	// log.Println(httpResponse.Header, error)
 	if error != nil {
+		fmt.Println(error.Error())
 		wrk.Status = 503 // status in case of timeout
 	} else {
 		wrk.Status = httpResponse.StatusCode
 	}
 
 	wrk.Duration = time.Since(start).Seconds()
-	log.Printf("Worker Reporting: %+v", *wrk)
+	// log.Printf("Worker Reporting: %+v", *wrk)
 	return wrk
 }
 
@@ -144,9 +193,14 @@ func (rep *Report) calcStats() *Report {
 }
 
 // NewURLStressReport probes an endpoint and generates a new report
-func NewURLStressReport(url string, requests, threads int) ([]byte, error) {
+func (mk *MonkeyConfig) NewURLStressReport() ([]byte, error) {
+	// @toDo refactor vars
+	url := mk.URL
+	requests := mk.Requests
+	threads := mk.Threads
+
 	start := time.Now()
-	report := Report{URL: url, TimeStamp: time.Now(), UUID: uuid.New()}
+	report := Report{URL: url, Resolve: mk.Resolve, TimeStamp: time.Now(), UUID: uuid.New()}
 
 	q := make(chan *message, threads)
 	// start number of threads
@@ -157,7 +211,7 @@ func NewURLStressReport(url string, requests, threads int) ([]byte, error) {
 	// send requests to q
 	for k := 1; k <= requests; k++ {
 		ctx := context.Background()
-		wrk := Worker{url: url, Request: k}
+		wrk := Worker{url: url, Request: k, resolve: mk.Resolve, insecure: mk.Insecure} // fuck ! all this logic is stupid
 		newRequest(ctx, wrk, q, &report)
 	}
 	close(q)
