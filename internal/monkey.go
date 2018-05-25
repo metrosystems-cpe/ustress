@@ -4,11 +4,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
+
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
 
 	"github.com/google/uuid"
 
@@ -142,7 +144,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 		wrk.Status = httpResponse.StatusCode
 	}
 	wrk.Duration = time.Since(start).Seconds()
-	log.Printf("Worker Reporting: %+v", *wrk) // @todo add report uuid to worker
+	log.LogWithFields.Debugf("Worker Reporting: %+v", *wrk) // @todo add report uuid to worker
 	return wrk
 }
 
@@ -186,8 +188,6 @@ func (rep *Report) calcStats() *Report {
 			numberOfErrors++
 		}
 	}
-	log.Printf("%-v", numberOfErrors)
-	log.Printf("%-v", requestDurations)
 	if rep.Stats.PercentileA, err = stats.Percentile(requestDurations, 50); err != nil {
 		rep.Stats.PercentileA = 0
 	}
@@ -204,7 +204,7 @@ func (rep *Report) calcStats() *Report {
 		rep.Stats.Median = 0
 	}
 	rep.Stats.ErrorPercentage = float64((numberOfErrors / rep.MonkeyConfig.Requests) * 100)
-	// log.Printf("%-v", rep)
+	log.LogWithFields.Debugf("%-v", rep)
 	return rep
 }
 
@@ -249,7 +249,7 @@ func NewFile(filename string) *os.File {
 	f, err := os.Create(HTTPfolder + filename)
 	f, err = os.OpenFile(HTTPfolder+filename, os.O_RDWR|os.O_APPEND, 0766) // For read access.
 	if err != nil {
-		fmt.Println(err.Error())
+		log.LogWithFields.Errorln(err.Error())
 	}
 
 	return f
@@ -260,7 +260,7 @@ func CreateDirIfNotExist(dir string) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			panic(err)
+			log.LogWithFields.Errorln(err.Error())
 		}
 	}
 }

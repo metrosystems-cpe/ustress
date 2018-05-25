@@ -2,9 +2,10 @@ package internal
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
+
+	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
 )
 
 var (
@@ -27,6 +28,7 @@ func errorHandler(wr http.ResponseWriter, req *http.Request, err string) {
 		OptionalArgs: []string{"resolve=IP:PORT", "insecure=true"},
 		Error:        err,
 	}
+	log.LogWithFields.Debugf("%+v", returnError)
 	z, _ := json.Marshal(returnError)
 	wr.Write(z)
 }
@@ -77,12 +79,9 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		Insecure: insecure,
 	}
 
-	log.Printf("%+v", mk)
+	log.LogWithFields.Debugf("%+v", mk)
 
 	messages, _ := mk.NewURLStressReport()
-	// os.Stdout.Write(messages)
-
-	log.Println(string(messages))
-
+	log.LogWithFields.Debugf(string(messages))
 	wr.Write(messages)
 }
