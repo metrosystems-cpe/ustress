@@ -66,12 +66,13 @@ type Worker struct {
 type Report struct {
 	// id uuid
 	// timestamp
-	URL       string    `json:"url"`
-	Requests  int       `json:"requests"`
-	Resolve   string    `json:"resolve"`
-	TimeStamp time.Time `json:"timestamp"`
-	UUID      uuid.UUID `json:"uuid"`
-	Stats     struct {
+	// URL          string       `json:"url"`
+	// Requests     int          `json:"requests"`
+	// Resolve      string       `json:"resolve"`
+	UUID         uuid.UUID    `json:"uuid"`
+	TimeStamp    time.Time    `json:"timestamp"`
+	MonkeyConfig MonkeyConfig `json:"config"`
+	Stats        struct {
 		Median          float64 `json:"median"`
 		PercentileA     float64 `json:"50_percentile"`
 		PercentileB     float64 `json:"75_percentile"`
@@ -138,18 +139,13 @@ func (wrk *Worker) doWork(id int) *Worker {
 		Timeout:   time.Duration(2 * time.Second),
 		Transport: tr,
 	}
-
-	//httpResponse, error := client.Head(url)
 	httpResponse, error := client.Get(wrk.url)
 	// log.Println(httpResponse.Header, error)
 	if error != nil {
-		// fmt.Println(error.Error())
 		wrk.Error = error.Error()
-		// wrk.Status = 000 // status in case of timeout
 	} else {
 		wrk.Status = httpResponse.StatusCode
 	}
-
 	wrk.Duration = time.Since(start).Seconds()
 	// log.Printf("Worker Reporting: %+v", *wrk)
 	return wrk
@@ -212,7 +208,7 @@ func (rep *Report) calcStats() *Report {
 	if rep.Stats.Median, _ = stats.Median(requestDurations); err != nil {
 		rep.Stats.Median = 0
 	}
-	rep.Stats.ErrorPercentage = float64((numberOfErrors / rep.Requests) * 100)
+	rep.Stats.ErrorPercentage = float64((numberOfErrors / rep.MonkeyConfig.Requests) * 100)
 	// log.Printf("%-v", rep)
 	return rep
 }
@@ -225,7 +221,7 @@ func (mk *MonkeyConfig) NewURLStressReport() ([]byte, error) {
 	threads := mk.Threads
 
 	start := time.Now()
-	report := Report{URL: url, Resolve: mk.Resolve, TimeStamp: time.Now(), UUID: uuid.New(), Requests: mk.Requests}
+	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mk}
 
 	q := make(chan *message, threads)
 	// start number of threads

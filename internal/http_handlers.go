@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,17 +12,35 @@ var (
 	rParam, wParam int
 )
 
-// URLStress write description
+type returnError struct {
+	RequestedURL string
+	Error        string
+	ExampleCall  string
+	OptionalArgs []string
+}
+
+func errorHandler(wr http.ResponseWriter, req *http.Request, err string) {
+	wr.WriteHeader(http.StatusBadRequest)
+	returnError := returnError{
+		RequestedURL: req.URL.String(),
+		ExampleCall:  req.URL.String() + "?url=http://localhost:9090&requests=20&workers=4",
+		OptionalArgs: []string{"resolve=IP:PORT", "insecure=true"},
+		Error:        err,
+	}
+	z, _ := json.Marshal(returnError)
+	wr.Write(z)
+}
+
+// URLStress is the handler for monkey probe
 func URLStress(wr http.ResponseWriter, req *http.Request) {
 	// exampleCall := "?url=http://localhost:9090&requests=20&workers=4"
 	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
+	wr.Header().Set("Content-Type", "application/json")
 
 	urlPath := req.URL.Query()
 
 	if uParam = urlPath.Get("url"); uParam == "" {
-		wr.WriteHeader(http.StatusBadRequest)
-		// wr.Write([]byte("missing url parameter\n eg: %s%s", urlPath, exampleCall))
-		wr.Write([]byte("missing url parameter"))
+		errorHandler(wr, req, "missing url parameter")
 		return
 	}
 
@@ -31,21 +49,26 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
 	if rParam <= 0 {
-		wr.WriteHeader(http.StatusBadRequest)
-		wr.Write([]byte("missing nr of requests parameter"))
+		errorHandler(wr, req, "missing requests parameter")
 		return
 	}
 
 	wParam, _ = strconv.Atoi(urlPath.Get("workers"))
 	if wParam <= 0 {
-		wr.WriteHeader(http.StatusBadRequest)
-		wr.Write([]byte("missing nr of workers parameter"))
+		errorHandler(wr, req, "missing workers parameter")
 		return
 	}
 
-	resolve := urlPath.Get("resolve") // @todo validate'it for god sake
+	resolve := urlPath.Get("resolve") // @todo validate ip:port
 
-	// @todo handle error
+	// limit the number of requests and number of threads.
+	if rParam > 1000 {
+		rParam = 1000
+	}
+	if wParam > 20 {
+		wParam = 20
+	}
+
 	mk := MonkeyConfig{
 		URL:      uParam,
 		Requests: rParam,
@@ -59,7 +82,7 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 	messages, _ := mk.NewURLStressReport()
 	// os.Stdout.Write(messages)
 
-	fmt.Println(string(messages))
-	wr.Header().Set("Content-Type", "application/json")
+	log.Println(string(messages))
+
 	wr.Write(messages)
 }
