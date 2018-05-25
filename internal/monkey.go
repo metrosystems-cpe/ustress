@@ -67,15 +67,17 @@ type Report struct {
 	// id uuid
 	// timestamp
 	URL       string    `json:"url"`
+	Requests  int       `json:"requests"`
 	Resolve   string    `json:"resolve"`
 	TimeStamp time.Time `json:"timestamp"`
 	UUID      uuid.UUID `json:"uuid"`
 	Stats     struct {
-		Median      float64 `json:"median"`
-		PercentileA float64 `json:"50_percentile"`
-		PercentileB float64 `json:"75_percentile"`
-		PercentileC float64 `json:"95_percentile"`
-		PercentileD float64 `json:"99_percentile"`
+		Median          float64 `json:"median"`
+		PercentileA     float64 `json:"50_percentile"`
+		PercentileB     float64 `json:"75_percentile"`
+		PercentileC     float64 `json:"95_percentile"`
+		PercentileD     float64 `json:"99_percentile"`
+		ErrorPercentage float64 `json:"error_percentage"`
 	} `json:"stats"`
 
 	Duration float64   `json:"durationTotal"`
@@ -183,14 +185,35 @@ func newRequest(ctx context.Context, worker Worker, q chan<- *message, report *R
 
 func (rep *Report) calcStats() *Report {
 	var requestDurations []float64
+	var numberOfErrors int
+	var err error
 	for _, value := range rep.Workers {
-		requestDurations = append(requestDurations, value.Duration)
+		// ignore errors
+		if value.Status != 0 {
+			requestDurations = append(requestDurations, value.Duration)
+		} else {
+			numberOfErrors++
+		}
 	}
-	rep.Stats.PercentileA, _ = stats.Percentile(requestDurations, 50)
-	rep.Stats.PercentileB, _ = stats.Percentile(requestDurations, 75)
-	rep.Stats.PercentileC, _ = stats.Percentile(requestDurations, 95)
-	rep.Stats.PercentileD, _ = stats.Percentile(requestDurations, 99)
-	rep.Stats.Median, _ = stats.Median(requestDurations)
+	log.Printf("%-v", numberOfErrors)
+	log.Printf("%-v", requestDurations)
+	if rep.Stats.PercentileA, err = stats.Percentile(requestDurations, 50); err != nil {
+		rep.Stats.PercentileA = 0
+	}
+	if rep.Stats.PercentileB, _ = stats.Percentile(requestDurations, 75); err != nil {
+		rep.Stats.PercentileB = 0
+	}
+	if rep.Stats.PercentileC, _ = stats.Percentile(requestDurations, 95); err != nil {
+		rep.Stats.PercentileC = 0
+	}
+	if rep.Stats.PercentileD, _ = stats.Percentile(requestDurations, 99); err != nil {
+		rep.Stats.PercentileD = 0
+	}
+	if rep.Stats.Median, _ = stats.Median(requestDurations); err != nil {
+		rep.Stats.Median = 0
+	}
+	rep.Stats.ErrorPercentage = float64((numberOfErrors / rep.Requests) * 100)
+	// log.Printf("%-v", rep)
 	return rep
 }
 
@@ -202,7 +225,7 @@ func (mk *MonkeyConfig) NewURLStressReport() ([]byte, error) {
 	threads := mk.Threads
 
 	start := time.Now()
-	report := Report{URL: url, Resolve: mk.Resolve, TimeStamp: time.Now(), UUID: uuid.New()}
+	report := Report{URL: url, Resolve: mk.Resolve, TimeStamp: time.Now(), UUID: uuid.New(), Requests: mk.Requests}
 
 	q := make(chan *message, threads)
 	// start number of threads
