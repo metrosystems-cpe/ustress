@@ -52,12 +52,13 @@ type MonkeyConfig struct {
 // Worker details, needed for returning the output and build the report
 type Worker struct {
 	Request  int     `json:"request"`
-	Status   int     `json:"status"`
+	Status   int     `json:"status"` // json:"status,omitempty"
 	Thread   int     `json:"thread"`
 	url      string  // should use net.url
 	resolve  string  // ip:port
 	insecure bool    // insecure request, does not check the certificate
 	Duration float64 `json:"duration"`
+	Error    string  `json:"error"` //`json:"error,omitempty"`
 }
 
 // Report is the report structure, object
@@ -140,8 +141,9 @@ func (wrk *Worker) doWork(id int) *Worker {
 	httpResponse, error := client.Get(wrk.url)
 	// log.Println(httpResponse.Header, error)
 	if error != nil {
-		fmt.Println(error.Error())
-		wrk.Status = 503 // status in case of timeout
+		// fmt.Println(error.Error())
+		wrk.Error = error.Error()
+		// wrk.Status = 000 // status in case of timeout
 	} else {
 		wrk.Status = httpResponse.StatusCode
 	}
