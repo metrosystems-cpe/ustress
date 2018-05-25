@@ -64,11 +64,6 @@ type Worker struct {
 // Report is the report structure, object
 // @todo calculate percentile 99, 95, 75, 50
 type Report struct {
-	// id uuid
-	// timestamp
-	// URL          string       `json:"url"`
-	// Requests     int          `json:"requests"`
-	// Resolve      string       `json:"resolve"`
 	UUID         uuid.UUID    `json:"uuid"`
 	TimeStamp    time.Time    `json:"timestamp"`
 	MonkeyConfig MonkeyConfig `json:"config"`
@@ -128,7 +123,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 		DualStack: true,
 	}
 
-	log.Println(wrk.resolve)
+	// log.Println(wrk.resolve)
 	if wrk.resolve != "" {
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return dialer.DialContext(ctx, network, wrk.resolve)
@@ -147,7 +142,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 		wrk.Status = httpResponse.StatusCode
 	}
 	wrk.Duration = time.Since(start).Seconds()
-	// log.Printf("Worker Reporting: %+v", *wrk)
+	log.Printf("Worker Reporting: %+v", *wrk) // @todo add report uuid to worker
 	return wrk
 }
 
