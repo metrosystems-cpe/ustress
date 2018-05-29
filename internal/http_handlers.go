@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
+	"git.metrosystems.net/reliability-engineering/traffic-monkey/slackNotifier"
 )
 
 var (
@@ -83,5 +84,12 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 
 	messages, _ := mk.NewURLStressReport()
 	log.LogWithFields.Debugf(string(messages))
+	slackNotifier.DeliverReport(
+		slackNotifier.RawParams{
+			Link:       mk.URL,
+			NrRequests: mk.Requests,
+			NrThreads:  mk.Threads,
+			Result:     messages,
+		})
 	wr.Write(messages)
 }
