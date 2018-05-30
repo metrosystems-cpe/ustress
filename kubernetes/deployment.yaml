@@ -1,18 +1,18 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: reliability-traffic-monkey
-  namespace: reliability-pp
+  name: reliability-restmonkey
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        k8s-app: traffic-monkey
+        app: restmonkey
+        component: restmonkey
     spec:
       containers:
-      - name: traffic-monkey
-        image: ubuntu:18.04
+      - name: restmonkey
+        image: peng-docker-prod.metroscales.io/reliability/restmonkey:latest
         ports:
         - name: http
           protocol: TCP
@@ -20,8 +20,43 @@ spec:
         resources:
           requests:
             memory: 50Mi
-            cpu: 100m
+            cpu: 500m
           limits:
             memory: 100Mi
-            cpu: 200m
+            cpu: 1
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: restmonkey
+  labels:
+    app: restmonkey
+    component: restmonkey
+spec:
+  selector:
+    app: restmonkey
+    component: restmonkey
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
 
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: restmonkey
+    component: restmonkey
+  name: restmonkey
+spec:
+  rules:
+  - host: restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io
+    http:
+      paths:
+      - backend:
+          serviceName: restmonkey
+          servicePort: 80
+status:
+  loadBalancer: {}
