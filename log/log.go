@@ -21,7 +21,7 @@ func init() {
 	// Can be any io.Writer, see below for File example
 	logrus.SetOutput(os.Stdout)
 	// Only log the warning severity or above.
-	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(logrus.InfoLevel)
 }
 
 func logrusFieldsConfig() *logrus.Fields {
