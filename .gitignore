@@ -3,7 +3,6 @@ vendor
 data
 test.go
 _test.go
-ui
 
 # Others
 .DS_STORE
