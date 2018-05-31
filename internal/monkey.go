@@ -145,6 +145,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 	}
 	wrk.Duration = time.Since(start).Seconds()
 	log.LogWithFields.Debugf("Worker Reporting: %+v", *wrk) // @todo add report uuid to worker
+	// fmt.Printf("%+v\n", *wrk)
 	return wrk
 }
 
@@ -177,8 +178,10 @@ func newRequest(ctx context.Context, worker Worker, q chan<- *message, report *R
 }
 
 func (rep *Report) calcStats() *Report {
+	// fmt.Printf("%-v", rep)
 	var requestDurations []float64
 	var numberOfErrors int
+	// var errorPercantege float64
 	var err error
 	for _, value := range rep.Workers {
 		// ignore http codes 100s to 500s
@@ -203,7 +206,8 @@ func (rep *Report) calcStats() *Report {
 	if rep.Stats.Median, _ = stats.Median(requestDurations); err != nil {
 		rep.Stats.Median = 0
 	}
-	rep.Stats.ErrorPercentage = float64((numberOfErrors / rep.MonkeyConfig.Requests) * 100)
+
+	rep.Stats.ErrorPercentage = float64(numberOfErrors) / float64(rep.MonkeyConfig.Requests) * 100
 	log.LogWithFields.Debugf("%-v", rep)
 	return rep
 }
