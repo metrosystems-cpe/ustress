@@ -1,4 +1,4 @@
-BINARY = trafficmonkey
+BINARY = restmonkey
 GOARCH = amd64
 
 VERSION?=?
@@ -31,13 +31,19 @@ windows:
 	@echo ">> building windows binary"
 	GOOS=windows GOARCH=amd64 go build -o ${BINARY}-windows-${GOARCH}.exe . ;
 
-# docker:
-# 	@echo ">> building docker image"
-# 	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f docsDockerFile .;
+docker:
+	@echo ">> building docker image"
+	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f dockerfile .;
 
-# docker-run:
-# 	@echo ">> running docker image"
-# 	docker run --rm -p 8080:8080 "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)";
+docker-run:
+	@echo ">> running docker image"
+	docker run --rm -p 8080:8080 "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)";
+
+docker-release:
+	@echo ">> make realease";
+	docker tag $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
+	docker push peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
+
 # simulate-pipeline-build:
 # 	@echo ">> simulate pipeline build"
 # 	@echo ">> $(GITURL)"
