@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"time"
 
 	"git.metrosystems.net/reliability-engineering/traffic-monkey/internal"
 	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
@@ -30,8 +30,7 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.RawQuery)
 
 	if file := req.URL.Query().Get("file"); file != "" {
-		fmt.Println(file)
-
+		// fmt.Println(file)
 		if match, _ := regexp.MatchString("^[a-z-0-9]+.json", file); match == true {
 			fileData, err := ioutil.ReadFile("data/" + file)
 			if err != nil {
@@ -63,13 +62,17 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataInterface := []interface{}{}
+	type fileInfo struct {
+		File string    `json:"file"`
+		Time time.Time `json:"time"`
+	}
+	var filesInfo []fileInfo
 
 	for _, file := range files {
-		dataInterface = append(dataInterface, map[string]string{"file": file.Name(), "time": file.ModTime().String()})
+		filesInfo = append(filesInfo, fileInfo{File: file.Name(), Time: file.ModTime()})
 	}
 
-	data, err := json.Marshal(dataInterface)
+	data, err := json.Marshal(filesInfo)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 		return
