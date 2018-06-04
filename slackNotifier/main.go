@@ -26,7 +26,7 @@ var (
 func host() string {
 	var h string
 	if h = os.Getenv("HTTP_INGRESS"); h == "" {
-		return "http://localhost:8080/ui"
+		return "http://localhost:8080/"
 	}
 
 	return h
@@ -55,7 +55,7 @@ func (data RawParams) ComputeAttachmentFields() FieldsList {
 	stats := out["stats"].(map[string]interface{})
 
 	list := FieldsList{
-		&slack.Field{Title: "Stressed URL", Value: data.Link, Short: true},
+		&slack.Field{Title: "Stressed URL", Value: data.Link},
 		&slack.Field{Title: "Number of Requests", Value: strconv.Itoa(data.NrRequests), Short: true},
 		&slack.Field{Title: "Number of Threads", Value: strconv.Itoa(data.NrThreads), Short: true},
 		&slack.Field{Title: "Median", Value: floatToString(stats["median"]), Short: true},
@@ -73,7 +73,7 @@ func (data RawParams) ComputeAttachmentFields() FieldsList {
 func (data RawParams) ReportLink() string {
 	var out map[string]interface{}
 	json.Unmarshal(data.Result, &out)
-	return fmt.Sprintf("%s/?report_id=%s", host(), out["uuid"].(string))
+	return fmt.Sprintf("%s/ui/?report_id=%s", host(), out["uuid"].(string))
 }
 
 // DeliverReport is used to deliver stres test report as slack notification
