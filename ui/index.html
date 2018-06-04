@@ -13,7 +13,6 @@
 
 <body>
     <div id="monkey-data">
-
         <v-app id="inspire">
             <v-navigation-drawer v-model="drawer" fixed app>
                 <v-list dense>
@@ -52,9 +51,7 @@
                                                 autocomplete @change="getReport">
                                                 <template slot="selection" slot-scope="data">
                                                     <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="data.parent.selectItem(data.item)">
-                                                        <v-icon left>poll</v-icon>
-                                                        {{ data.item.file.slice(0, -5) }}
-                                                    </v-chip>
+                                                        <v-icon left>poll</v-icon>{{ data.item.file.slice(0, -5) }}</v-chip>
                                                 </template>
                                                 <template slot="item" slot-scope="data">
                                                     <template v-if="typeof data.item !== 'object'">
@@ -175,7 +172,7 @@
                                         <v-card flat>
                                             <template>
                                                 <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" item-key="monkeyWorkerDataTableData.requests"
-                                                    class="elevation-1" prev-icon="mdi-menu-left" next-icon="mdi-menu-right"
+ class="elevation-1" prev-icon="chevron_left" next-icon="chevron_right"
                                                     sort-icon="mdi-menu-down">
                                                     <template slot="items" slot-scope="props">
                                                         <td class="text-xs-right">{{ props.item.request }}</td>
