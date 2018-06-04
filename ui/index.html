@@ -28,86 +28,109 @@
                 <v-toolbar-title>Reliability Engineering | REST Monkey</v-toolbar-title>
             </v-toolbar>
 
-            <v-content>
+            <v-content v-if="loading === false">
                 <v-container grid-list-xl text-xs-center>
                     <v-layout row wrap>
-                        <v-flex tag="h1" class="headline">Report</v-flex>
+                        <v-flex tag="h1" class="headline">REST Monkey Reports</v-flex>
 
                         <v-flex d-flex xs12 order-xs5>
                             <v-layout column>
                                 <v-flex>
                                     <v-card flat>
-                                        <v-card-text>
-                                            <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused"
-                                                @change="getReport"></v-select>
-                                        </v-card-text>
-                                    </v-card>
-                                </v-flex>
-                                <v-flex>
-                                    <v-card flat>
-                                        <v-card-title>
-                                            <h4>Report Details</h4>
-                                        </v-card-title>
-                                        <v-divider></v-divider>
-
-                                        <v-list-tile>
-                                            <v-list-tile-content>UUID:</v-list-tile-content>
-                                            <v-list-tile-content class="align-end">{{ monkeyData.uuid }}</v-list-tile-content>
-                                        </v-list-tile>
-                                        <v-list-tile>
-                                            <v-list-tile-content>TimeStamp:</v-list-tile-content>
-                                            <v-list-tile-content class="align-end">{{ monkeyData.timestamp }}</v-list-tile-content>
-                                        </v-list-tile>
-                                        <v-list-tile>
-                                            <v-list-tile-content>Total duration:</v-list-tile-content>
-                                            <v-list-tile-content class="align-end">{{ monkeyData.durationTotal }}</v-list-tile-content>
-                                        </v-list-tile>
-                                    </v-card>
-                                </v-flex>
-                                <v-flex>
-                                    <v-card flat>
-                                        <v-card-title>
-                                            <h4>Monkey Config</h4>
-                                        </v-card-title>
-                                        <v-divider></v-divider>
-                                        <v-list-tile v-for="(value, key) in monkeyData.config" :key="key">
-                                            <v-list-tile-content>{{ key }}:</v-list-tile-content>
-                                            <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
-                                        </v-list-tile>
-                                    </v-card>
-                                </v-flex>
-
-                                <v-flex>
-                                    <v-card flat>
-                                        <v-card-title>
-                                            <h4>Monkey Statistics</h4>
-                                        </v-card-title>
-                                        <v-divider></v-divider>
-                                        <v-list-tile v-for="(value, key) in monkeyData.stats" :key="key">
-                                            <v-list-tile-content>{{ key }}:</v-list-tile-content>
-                                            <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
-                                        </v-list-tile>
-                                    </v-card>
-                                </v-flex>
-
-                                <v-flex>
-                                    <v-card flat>
-                                        <v-card-text>
-                                            <template>
-                                                <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" class="elevation-1" prev-icon="mdi-menu-left"
-                                                    next-icon="mdi-menu-right" sort-icon="mdi-menu-down">
-                                                    <template slot="items" slot-scope="props">
-                                                        <td class="text-xs-right">{{ props.item.request }}</td>
-                                                        <td class="text-xs-right">{{ props.item.status }}</td>
-                                                        <td class="text-xs-right">{{ props.item.thread }}</td>
-                                                        <td class="text-xs-right">{{ props.item.duration }}</td>
-                                                        <td class="text-xs-right">{{ props.item.error }}</td>
-                                                    </template>
-                                                </v-data-table>
+                                        <!-- <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused" @change="getReport"></v-select> -->
+                                        <v-select :items="reports" v-model="reportID" label="Select" item-text="file" item-value="file" single chips max-height="auto"
+                                            autocomplete @change="getReport">
+                                            <template slot="selection" slot-scope="data">
+                                                <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="data.parent.selectItem(data.item)">
+                                                    <v-icon left>poll</v-icon>
+                                                    {{ data.item.file.slice(0, -5) }}
+                                                </v-chip>
                                             </template>
-                                        </v-card-text>
+                                            <template slot="item" slot-scope="data">
+                                                <template v-if="typeof data.item !== 'object'">
+                                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                                </template>
+                                                <template v-else>
+                                                    <v-list-tile-avatar>
+                                                        <v-icon left>poll</v-icon>
+                                                    </v-list-tile-avatar>
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title v-html="data.item.file.slice(0, -5)"></v-list-tile-title>
+                                                        <v-list-tile-sub-title> {{ formatTimeStamp(data.item.time) }} </v-list-tile-sub-title>
+                                                    </v-list-tile-content>
+                                                </template>
+                                            </template>
+                                        </v-select>
                                     </v-card>
                                 </v-flex>
+
+                                <div v-if="reportID">
+                                    <v-flex>
+                                        <v-card flat>
+                                            <v-card-title>
+                                                <h4>Report Details</h4>
+                                            </v-card-title>
+                                            <v-divider></v-divider>
+
+                                            <v-list-tile>
+                                                <v-list-tile-content>UUID:</v-list-tile-content>
+                                                <v-list-tile-content class="align-end">{{ monkeyData.uuid }}</v-list-tile-content>
+                                            </v-list-tile>
+                                            <v-list-tile>
+                                                <v-list-tile-content>TimeStamp:</v-list-tile-content>
+                                                <v-list-tile-content class="align-end">{{ monkeyData.timestamp }}</v-list-tile-content>
+                                            </v-list-tile>
+                                            <v-list-tile>
+                                                <v-list-tile-content>Total duration:</v-list-tile-content>
+                                                <v-list-tile-content class="align-end">{{ monkeyData.durationTotal }}</v-list-tile-content>
+                                            </v-list-tile>
+                                        </v-card>
+                                    </v-flex>
+                                    <v-flex>
+                                        <v-card flat>
+                                            <v-card-title>
+                                                <h4>Monkey Config</h4>
+                                            </v-card-title>
+                                            <v-divider></v-divider>
+                                            <v-list-tile v-for="(value, key) in monkeyData.config" :key="key">
+                                                <v-list-tile-content>{{ key }}:</v-list-tile-content>
+                                                <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
+                                            </v-list-tile>
+                                        </v-card>
+                                    </v-flex>
+
+                                    <v-flex>
+                                        <v-card flat>
+                                            <v-card-title>
+                                                <h4>Monkey Statistics</h4>
+                                            </v-card-title>
+                                            <v-divider></v-divider>
+                                            <v-list-tile v-for="(value, key) in monkeyData.stats" :key="key">
+                                                <v-list-tile-content>{{ key }}:</v-list-tile-content>
+                                                <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
+                                            </v-list-tile>
+                                        </v-card>
+                                    </v-flex>
+
+                                    <v-flex>
+                                        <v-card flat>
+                                            <v-card-text>
+                                                <template>
+                                                    <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" class="elevation-1" prev-icon="mdi-menu-left"
+                                                        next-icon="mdi-menu-right" sort-icon="mdi-menu-down">
+                                                        <template slot="items" slot-scope="props">
+                                                            <td class="text-xs-right">{{ props.item.request }}</td>
+                                                            <td class="text-xs-right">{{ props.item.status }}</td>
+                                                            <td class="text-xs-right">{{ props.item.thread }}</td>
+                                                            <td class="text-xs-right">{{ props.item.duration }}</td>
+                                                            <td class="text-xs-right">{{ props.item.error }}</td>
+                                                        </template>
+                                                    </v-data-table>
+                                                </template>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-flex>
+                                </div>
                             </v-layout>
                         </v-flex>
                     </v-layout>
@@ -122,6 +145,7 @@
 </body>
 
 <script src="https://unpkg.com/vue"></script>
+<!-- <script src="https://unpkg.com/vuex@2.0.0"></script> -->
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
 <script type='text/javascript' src='index.js'></script>

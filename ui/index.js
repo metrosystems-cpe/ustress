@@ -28,6 +28,25 @@
 //               </ul>`
 // }
 
+// Vue.component('line-chart', {
+//     extends: VueChartJs.Line,
+//     mounted() {
+//         this.renderChart({
+//             labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+//             datasets: [{
+//                 label: 'Data One',
+//                 backgroundColor: '#f87979',
+//                 data: []
+//             }]
+//         }, {
+//             responsive: true,
+//             maintainAspectRatio: false
+//         })
+//     }
+// })
+
+
+
 // bootstrap the demo
 var workers = new Vue({
     el: '#monkey-data',
@@ -45,68 +64,58 @@ var workers = new Vue({
             drawer: "",
             reportID: null,
             monkeyWorkerDataTableHeader: [{
-                        text: 'request',
-                        align: 'left',
-                        value: 'request'
-                    },
-                    {
-                        text: 'status',
-                        value: 'status'
-                    },
-                    {
-                        text: 'thread',
-                        value: 'thread'
-                    },
-                    {
-                        text: 'duration',
-                        value: 'duration'
-                    },
-                    {
-                        text: 'error',
-                        value: 'error'
-                    }
-                ],
-                monkeyData: {},
-                monkeyWorkerDataTableData: [],
-                reports: []
-            }
+                    text: 'request',
+                    align: 'left',
+                    value: 'request'
+                },
+                {
+                    text: 'status',
+                    value: 'status'
+                },
+                {
+                    text: 'thread',
+                    value: 'thread'
+                },
+                {
+                    text: 'duration',
+                    value: 'duration'
+                },
+                {
+                    text: 'error',
+                    value: 'error'
+                }
+            ],
+            monkeyData: {},
+            monkeyWorkerDataTableData: [],
+            reports: [],
+            chartData: [40, 39, 10, 40, 39, 80, 40]
+        }
     },
     methods: {
-        getReport: function(value) {
-            // console.log(value);
+        getReport: function (value) {
             axios
-             .get('/api/v1/reports?file=' + value)
-                 .then(response => {
-                     this.monkeyData = response.data
-                     this.monkeyWorkerDataTableData = response.data.data
-                 })
-                 .catch(error => {
-                     console.log(error)
-                     this.errored = true
-                 })
-                 .finally(() => this.loading = false)
-        }
+                .get('/api/v1/reports?file=' + value)
+                .then(response => {
+                    this.monkeyData = response.data
+                    this.monkeyWorkerDataTableData = response.data.data
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.errored = true
+                })
+                .finally(() => this.loading = false)
+        },
+        formatTimeStamp: function (value) {
+            var date = new Date(value);
+            var formattedDate = ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2) + ':' + ('0' + date.getMilliseconds());
+            return formattedDate
+        },
     },
     mounted() {
         axios
-            // .get('/api/v1/reports?file=4a0e87b9-1940-4486-af2c-2de55dded5f0.json')
             .get('/api/v1/reports')
             .then(response => {
-
-                // try { // it is, so now let's see if its valid JSON
-                //     var myJson = resp = JSON.parse(response.data);
-                //     // yep, we're working with valid JSON
-                // } catch (e) {
-                //     // nope, we got what we thought was JSON, it isn't; let's handle it.
-                //     console.log(e)
-                // }
-
                 this.reports = response.data
-                // this.monkeyData = response.data
-                // this.monkeyWorkerDataTableData = response.data.data
-
-
-
             })
             .catch(error => {
                 console.log(error)
