@@ -48,11 +48,15 @@
                                         <v-card-text>
                                             <!-- <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused" @change="getReport"></v-select> -->
                                             <v-select :items="reports" v-model="reportID" label="Select" item-text="file" item-value="file" single chips max-height="auto"
-                                                autocomplete @change="getReport">
+                                                autocomplete clearable @change="getReport">
+
                                                 <template slot="selection" slot-scope="data">
-                                                    <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="data.parent.selectItem(data.item)">
-                                                        <v-icon left>poll</v-icon>{{ data.item.file.slice(0, -5) }}</v-chip>
+                                                    <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="removeChip(data.item)">
+                                                        <v-icon left>poll</v-icon>
+                                                        {{ data.item.file.slice(0, -5) }}
+                                                    </v-chip>
                                                 </template>
+
                                                 <template slot="item" slot-scope="data">
                                                     <template v-if="typeof data.item !== 'object'">
                                                         <v-list-tile-content v-text="data.item"></v-list-tile-content>
@@ -172,8 +176,8 @@
                                         <v-card flat>
                                             <template>
                                                 <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" item-key="monkeyWorkerDataTableData.requests"
- class="elevation-1" prev-icon="chevron_left" next-icon="chevron_right"
-                                                    sort-icon="mdi-menu-down">
+                                                    class="elevation-1" prev-icon="chevron_left" next-icon="chevron_right" sort-icon="mdi-menu-down"
+                                                    :rows-per-page-items='[25,50,75,100,{"text":"All","value":-1}]'>
                                                     <template slot="items" slot-scope="props">
                                                         <td class="text-xs-right">{{ props.item.request }}</td>
                                                         <td class="text-xs-right">{{ props.item.status }}</td>
@@ -193,6 +197,12 @@
             </v-content>
             <v-footer color="indigo" app>
                 <span class="white--text">&copy; 2017</span>
+                </br>
+                <div class="white--text">Icons made by
+                    <a href="http://www.freepik.com" title="Freepik">Freepik</a> from
+                    <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
+                    <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+                </div>
             </v-footer>
         </v-app>
     </div>
