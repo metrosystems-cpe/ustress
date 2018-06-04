@@ -65,24 +65,32 @@ var workers = new Vue({
             reportID: null,
             monkeyWorkerDataTableHeader: [{
                     text: 'request',
-                    align: 'left',
-                    value: 'request'
+                    align: 'right',
+                    value: 'request',
+                    width: '90'
                 },
                 {
                     text: 'status',
-                    value: 'status'
+                    align: 'right',
+                    value: 'status',
+                    width: '90'
                 },
                 {
                     text: 'thread',
-                    value: 'thread'
+                    align: 'right',
+                    value: 'thread',
+                    width: '90'
                 },
                 {
                     text: 'duration',
-                    value: 'duration'
+                    align: 'right',
+                    value: 'duration',
+                    width: '150'
                 },
                 {
                     text: 'error',
-                    value: 'error'
+                    align: 'left',
+                    value: 'error',
                 }
             ],
             monkeyData: {},
