@@ -46,6 +46,19 @@
 // })
 
 
+var mapQueryParams = function(url) {
+    if (url == "") return {};
+    var queryMap = {};
+
+    for (var i = 0; i < url.length; ++i) {
+        var p = url[i].split('=', 2);
+        if (p.length == 1)
+            queryMap[p[0]] = "";
+        else
+            queryMap[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return queryMap;
+}
 
 // bootstrap the demo
 var workers = new Vue({
@@ -112,6 +125,11 @@ var workers = new Vue({
         },
     },
     mounted() {
+        var params = mapQueryParams(window.location.search.substr(1).split('&'));
+        if (params.report_id) {
+            this.reportID = params.report_id + ".json";
+            this.getReport(this.reportID);
+        }
         axios
             .get('/api/v1/reports')
             .then(response => {
