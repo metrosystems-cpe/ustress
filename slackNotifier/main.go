@@ -3,6 +3,7 @@ package slackNotifier
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
@@ -14,14 +15,22 @@ import (
 // For pp: https://hooks.slack.com/services/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
 const (
 	webhook = "https://hooks.slack.com/services/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"
-	host    = "http://localhost:8080"
-	deliver = false // set to true to deliver slack notifications
+	deliver = true // set to true to deliver slack notifications
 )
 
 var (
 	authorName  = "Traffic Monkey"
 	authorImage = "https://i.pinimg.com/736x/29/61/55/29615560c6387dd576b3076eae0b760d--cartoon-monkey-family-guy.jpg"
 )
+
+func host() string {
+	var h string
+	if h = os.Getenv("HTTP_INGRESS"); h == "" {
+		return "http://localhost:8080/ui"
+	}
+
+	return h
+}
 
 // RawParams keeps necessay data to send notifications on slack
 type RawParams struct {
@@ -64,7 +73,7 @@ func (data RawParams) ComputeAttachmentFields() FieldsList {
 func (data RawParams) ReportLink() string {
 	var out map[string]interface{}
 	json.Unmarshal(data.Result, &out)
-	return fmt.Sprintf("%s/data/%s.json", host, out["uuid"].(string))
+	return fmt.Sprintf("%s/?report_id=%s", host(), out["uuid"].(string))
 }
 
 // DeliverReport is used to deliver stres test report as slack notification
