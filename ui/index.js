@@ -78,24 +78,32 @@ var workers = new Vue({
             reportID: null,
             monkeyWorkerDataTableHeader: [{
                     text: 'request',
-                    align: 'left',
-                    value: 'request'
+                    align: 'right',
+                    value: 'request',
+                    width: '90'
                 },
                 {
                     text: 'status',
-                    value: 'status'
+                    align: 'right',
+                    value: 'status',
+                    width: '90'
                 },
                 {
                     text: 'thread',
-                    value: 'thread'
+                    align: 'right',
+                    value: 'thread',
+                    width: '90'
                 },
                 {
                     text: 'duration',
-                    value: 'duration'
+                    align: 'right',
+                    value: 'duration',
+                    width: '150'
                 },
                 {
                     text: 'error',
-                    value: 'error'
+                    align: 'left',
+                    value: 'error',
                 }
             ],
             monkeyData: {},
@@ -122,6 +130,9 @@ var workers = new Vue({
             var date = new Date(value);
             var formattedDate = ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2) + ':' + ('0' + date.getMilliseconds());
             return formattedDate
+        },
+        removeChip: function (value) {
+            this.reportID = null;
         },
     },
     mounted() {

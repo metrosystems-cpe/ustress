@@ -4,11 +4,15 @@
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
     <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <style>
+        p.wordwrap {
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 
 <body>
     <div id="monkey-data">
-
         <v-app id="inspire">
             <v-navigation-drawer v-model="drawer" fixed app>
                 <v-list dense>
@@ -37,30 +41,39 @@
                             <v-layout column>
                                 <v-flex>
                                     <v-card flat>
-                                        <!-- <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused" @change="getReport"></v-select> -->
-                                        <v-select :items="reports" v-model="reportID" label="Select" item-text="file" item-value="file" single chips max-height="auto"
-                                            autocomplete @change="getReport">
-                                            <template slot="selection" slot-scope="data">
-                                                <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="data.parent.selectItem(data.item)">
-                                                    <v-icon left>poll</v-icon>
-                                                    {{ data.item.file.slice(0, -5) }}
-                                                </v-chip>
-                                            </template>
-                                            <template slot="item" slot-scope="data">
-                                                <template v-if="typeof data.item !== 'object'">
-                                                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
-                                                </template>
-                                                <template v-else>
-                                                    <v-list-tile-avatar>
+                                        <v-card-title>
+                                            <h4>Select A Report</h4>
+                                        </v-card-title>
+                                        <v-divider></v-divider>
+                                        <v-card-text>
+                                            <!-- <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused" @change="getReport"></v-select> -->
+                                            <v-select :items="reports" v-model="reportID" label="Select" item-text="file" item-value="file" single chips max-height="auto"
+                                                autocomplete clearable @change="getReport">
+
+                                                <template slot="selection" slot-scope="data">
+                                                    <v-chip :selected="data.selected" :key="JSON.stringify(data.item)" close label @input="removeChip(data.item)">
                                                         <v-icon left>poll</v-icon>
-                                                    </v-list-tile-avatar>
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title v-html="data.item.file.slice(0, -5)"></v-list-tile-title>
-                                                        <v-list-tile-sub-title> {{ formatTimeStamp(data.item.time) }} </v-list-tile-sub-title>
-                                                    </v-list-tile-content>
+                                                        {{ data.item.file.slice(0, -5) }}
+                                                    </v-chip>
                                                 </template>
-                                            </template>
-                                        </v-select>
+
+                                                <template slot="item" slot-scope="data">
+                                                    <template v-if="typeof data.item !== 'object'">
+                                                        <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                                                    </template>
+                                                    <template v-else>
+                                                        <v-list-tile-avatar>
+                                                            <v-icon left>poll</v-icon>
+                                                        </v-list-tile-avatar>
+                                                        <v-list-tile-content>
+                                                            <v-list-tile-title v-html="data.item.file.slice(0, -5)"></v-list-tile-title>
+                                                            <v-list-tile-sub-title> {{ formatTimeStamp(data.item.time) }} </v-list-tile-sub-title>
+                                                        </v-list-tile-content>
+                                                    </template>
+                                                </template>
+                                            </v-select>
+                                        </v-card-text>
+
                                     </v-card>
                                 </v-flex>
 
@@ -71,31 +84,68 @@
                                                 <h4>Report Details</h4>
                                             </v-card-title>
                                             <v-divider></v-divider>
+                                            <v-card-text>
+                                                <v-layout>
+                                                    <v-flex xs3 sm3 md3 lg3 xl3>
+                                                        <div>
+                                                            <p class="text-lg-left">UUID:</p>
+                                                        </div>
+                                                    </v-flex>
+                                                    <v-flex xs9 sm9 md9 lg9 xl9>
+                                                        <div>
+                                                            <p class="text-lg-right">{{ monkeyData.uuid }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                </v-layout>
+                                                <v-layout>
+                                                    <v-flex xs3 sm3 md3 lg3 xl3>
+                                                        <div>
+                                                            <p class="text-lg-left">TimeStamp:</p>
+                                                        </div>
+                                                    </v-flex>
+                                                    <v-flex xs9 sm9 md9 lg9 xl9>
+                                                        <div>
+                                                            <p class="text-lg-right">{{ monkeyData.timestamp }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                </v-layout>
+                                                <v-layout>
+                                                    <v-flex xs3 sm3 md3 lg3 xl3>
+                                                        <div>
+                                                            <p class="text-lg-left">Total duration:</p>
+                                                        </div>
+                                                    </v-flex>
+                                                    <v-flex xs9 sm9 md9 lg9 xl9>
+                                                        <div>
+                                                            <p class="text-lg-right">{{ monkeyData.durationTotal }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                </v-layout>
+                                            </v-card-text>
 
-                                            <v-list-tile>
-                                                <v-list-tile-content>UUID:</v-list-tile-content>
-                                                <v-list-tile-content class="align-end">{{ monkeyData.uuid }}</v-list-tile-content>
-                                            </v-list-tile>
-                                            <v-list-tile>
-                                                <v-list-tile-content>TimeStamp:</v-list-tile-content>
-                                                <v-list-tile-content class="align-end">{{ monkeyData.timestamp }}</v-list-tile-content>
-                                            </v-list-tile>
-                                            <v-list-tile>
-                                                <v-list-tile-content>Total duration:</v-list-tile-content>
-                                                <v-list-tile-content class="align-end">{{ monkeyData.durationTotal }}</v-list-tile-content>
-                                            </v-list-tile>
                                         </v-card>
                                     </v-flex>
+
                                     <v-flex>
                                         <v-card flat>
                                             <v-card-title>
                                                 <h4>Monkey Config</h4>
                                             </v-card-title>
                                             <v-divider></v-divider>
-                                            <v-list-tile v-for="(value, key) in monkeyData.config" :key="key">
-                                                <v-list-tile-content>{{ key }}:</v-list-tile-content>
-                                                <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
-                                            </v-list-tile>
+                                            <v-card-text>
+                                                <v-layout v-for="(value, key) in monkeyData.config" :key="key">
+                                                    <v-flex xs3 sm3 md3 lg3 xl3>
+                                                        <div>
+                                                            <p class="text-lg-left">{{ key }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                    <v-flex xs9 sm9 md9 lg9 xl9>
+                                                        <div>
+                                                            <p class="text-lg-right wordwrap">{{ value }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                </v-layout>
+                                            </v-card-text>
                                         </v-card>
                                     </v-flex>
 
@@ -105,29 +155,38 @@
                                                 <h4>Monkey Statistics</h4>
                                             </v-card-title>
                                             <v-divider></v-divider>
-                                            <v-list-tile v-for="(value, key) in monkeyData.stats" :key="key">
-                                                <v-list-tile-content>{{ key }}:</v-list-tile-content>
-                                                <v-list-tile-content class="align-end">{{ value }}</v-list-tile-content>
-                                            </v-list-tile>
+                                            <v-card-text>
+                                                <v-layout v-for="(value, key) in monkeyData.stats" :key="key">
+                                                    <v-flex xs3 sm3 md3 lg3 xl3>
+                                                        <div>
+                                                            <p class="text-lg-left">{{ key }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                    <v-flex xs9 sm9 md9 lg9 xl9>
+                                                        <div>
+                                                            <p class="text-lg-right">{{ value }}</p>
+                                                        </div>
+                                                    </v-flex>
+                                                </v-layout>
+                                            </v-card-text>
                                         </v-card>
                                     </v-flex>
 
                                     <v-flex>
                                         <v-card flat>
-                                            <v-card-text>
-                                                <template>
-                                                    <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" class="elevation-1" prev-icon="mdi-menu-left"
-                                                        next-icon="mdi-menu-right" sort-icon="mdi-menu-down">
-                                                        <template slot="items" slot-scope="props">
-                                                            <td class="text-xs-right">{{ props.item.request }}</td>
-                                                            <td class="text-xs-right">{{ props.item.status }}</td>
-                                                            <td class="text-xs-right">{{ props.item.thread }}</td>
-                                                            <td class="text-xs-right">{{ props.item.duration }}</td>
-                                                            <td class="text-xs-right">{{ props.item.error }}</td>
-                                                        </template>
-                                                    </v-data-table>
-                                                </template>
-                                            </v-card-text>
+                                            <template>
+                                                <v-data-table :headers="monkeyWorkerDataTableHeader" :items="monkeyWorkerDataTableData" item-key="monkeyWorkerDataTableData.requests"
+                                                    class="elevation-1" prev-icon="chevron_left" next-icon="chevron_right" sort-icon="mdi-menu-down"
+                                                    :rows-per-page-items='[25,50,75,100,{"text":"All","value":-1}]'>
+                                                    <template slot="items" slot-scope="props">
+                                                        <td class="text-xs-right">{{ props.item.request }}</td>
+                                                        <td class="text-xs-right">{{ props.item.status }}</td>
+                                                        <td class="text-xs-right">{{ props.item.thread }}</td>
+                                                        <td class="text-xs-right">{{ props.item.duration }}</td>
+                                                        <td class="text-xs-left">{{ props.item.error }}</td>
+                                                    </template>
+                                                </v-data-table>
+                                            </template>
                                         </v-card>
                                     </v-flex>
                                 </div>
@@ -138,6 +197,12 @@
             </v-content>
             <v-footer color="indigo" app>
                 <span class="white--text">&copy; 2017</span>
+                </br>
+                <div class="white--text">Icons made by
+                    <a href="http://www.freepik.com" title="Freepik">Freepik</a> from
+                    <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
+                    <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+                </div>
             </v-footer>
         </v-app>
     </div>
