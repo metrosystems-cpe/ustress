@@ -30,22 +30,43 @@
             <v-toolbar color="indigo" height=48 dark fixed app>
                 <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
                 <v-toolbar-title>Reliability Engineering | REST Monkey</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn icon>
+                    <v-icon>git</v-icon>
+                </v-btn>
             </v-toolbar>
 
-            <v-content v-if="loading === false">
+
+
+            <v-content>
                 <v-container grid-list-xl text-xs-center>
                     <v-layout row wrap>
                         <v-flex tag="h1" class="headline">REST Monkey Reports</v-flex>
-
                         <v-flex d-flex xs12 order-xs5>
                             <v-layout column>
+
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-text>
+                                            <h4>{{ monkeyData }}</h4>
+                                            <!-- <h4>rep: {{ reports }}</h4>
+                                            <h4>err: {{ errored }} </h4>
+                                            <h4>loading: {{ loading }}</h4> -->
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
                                 <v-flex>
                                     <v-card flat>
                                         <v-card-title>
-                                            <h4>Select A Report</h4>
+                                            <!-- <v-btn flat icon color="primary" slot="activator" @click.stop="configInfo=true">
+                                                <v-icon>info</v-icon>
+                                            </v-btn> -->
+                                            <h4>Reports</h4>
                                         </v-card-title>
                                         <v-divider></v-divider>
-                                        <v-card-text>
+                                        <v-card-text v-if="reports">
                                             <!-- <v-select :items="reports" item-text="file" item-value="file" v-model="reportID" label="Select" class="input-group--focused" @change="getReport"></v-select> -->
                                             <v-select :items="reports" v-model="reportID" label="Select" item-text="file" item-value="file" single chips max-height="auto"
                                                 autocomplete clearable @change="getReport">
@@ -73,9 +94,64 @@
                                                 </template>
                                             </v-select>
                                         </v-card-text>
-
+                                        <v-card-text v-else>
+                                            <v-alert :value="true" type="info" icon="info">
+                                                No reports in the backend !
+                                            </v-alert>
+                                        </v-card-text>
                                     </v-card>
                                 </v-flex>
+
+
+                                <!-- <v-dialog v-model="configInfo" scrollable max-width="800px">
+                                    <v-card>
+                                        <v-card-title>
+                                            <h4>Usage</h4>
+                                        </v-card-title>
+                                        <v-card-text class="text-lg-left">
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <h4 class="text-lg-left">Endpoint:</h4>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <p class="text-lg-right">/probe</p>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <h4 class="text-lg-left">Mandatory Arguments:</h4>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <p class="text-lg-right">url=localhost&requests=10&workers=4</p>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <h4 class="text-lg-left">Optional Arguments:</h4>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <p class="text-lg-right">"resolve=IP:PORT", "insecure=true"</p>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs12 sm12 md12 lg12 xl12>
+                                                    <h4>Eg: minimum</h4>
+                                                    <p class="text-lg-left wordwrap">/probe?requests=4&workers=2&url=https%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken</p>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs12 sm12 md12 lg12 xl12>
+                                                    <h4>Eg: insecure and resolvable</h4>
+                                                    <p class="text-lg-left wordwrap">/probe?insecure=true&resolve=10.29.30.8:443&requests=4&workers=2&url=https%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken</p>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                        <v-card-actions>
+                                            <v-btn color="primary" flat @click.native="configInfo=false">Close</v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-dialog> -->
+
 
                                 <div v-if="reportID">
                                     <v-flex>
@@ -195,14 +271,8 @@
                     </v-layout>
                 </v-container>
             </v-content>
-            <v-footer color="indigo" app>
+            <v-footer color="black" app>
                 <span class="white--text">&copy; 2017</span>
-                </br>
-                <div class="white--text">Icons made by
-                    <a href="http://www.freepik.com" title="Freepik">Freepik</a> from
-                    <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by
-                    <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
-                </div>
             </v-footer>
         </v-app>
     </div>

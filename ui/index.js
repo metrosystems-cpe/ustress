@@ -28,6 +28,7 @@
 //               </ul>`
 // }
 
+
 // Vue.component('line-chart', {
 //     extends: VueChartJs.Line,
 //     mounted() {
@@ -46,7 +47,7 @@
 // })
 
 
-var mapQueryParams = function(url) {
+var mapQueryParams = function (url) {
     if (url == "") return {};
     var queryMap = {};
 
@@ -75,6 +76,7 @@ var workers = new Vue({
             errored: false,
             searchQuery: '',
             drawer: "",
+            configInfo: false,
             reportID: null,
             monkeyWorkerDataTableHeader: [{
                     text: 'request',

@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/pprof"
 	"regexp"
 	"time"
 
@@ -31,7 +32,7 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 
 	if file := req.URL.Query().Get("file"); file != "" {
 		// fmt.Println(file)
-		if match, _ := regexp.MatchString("^[a-z-0-9]+.json", file); match == true {
+		if match, _ := regexp.MatchString("^[a-z-0-9]+.json$", file); match == true {
 			fileData, err := ioutil.ReadFile("data/" + file)
 			if err != nil {
 				log.LogWithFields.Error(err.Error())
@@ -93,12 +94,18 @@ func main() {
 
 	mux.HandleFunc("/probe", internal.URLStress)
 
-	// mux.HandleFunc("/api/v1/reports", reports)
 	mux.HandleFunc("/api/v1/reports", reports)
 
 	mux.HandleFunc("/.well-known/ready", healthHandler)
 	mux.HandleFunc("/.well-known/live", healthHandler)
 	mux.HandleFunc("/.well-known/metrics", prometheusHandler)
+
+	// Register pprof handlers
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	log.LogWithFields.Infof("Starting proxy server on: %v", *addr)
 	if err := http.ListenAndServe(*addr, mux); err != nil {

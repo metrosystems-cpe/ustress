@@ -15,7 +15,7 @@ import (
 // For pp: https://hooks.slack.com/services/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
 const (
 	webhook = "https://hooks.slack.com/services/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"
-	deliver = true // set to true to deliver slack notifications
+	deliver = false // set to true to deliver slack notifications
 )
 
 var (
