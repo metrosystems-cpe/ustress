@@ -7,6 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
+
+	"golang.org/x/net/websocket"
+
 	"regexp"
 	"time"
 
@@ -91,6 +94,7 @@ func main() {
 
 	mux.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data"))))
 	mux.Handle("/ui/", http.StripPrefix("/ui/", http.FileServer(http.Dir("ui"))))
+	mux.Handle("/ws", websocket.Handler(internal.WsServer))
 
 	mux.HandleFunc("/probe", internal.URLStress)
 

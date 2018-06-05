@@ -16,12 +16,20 @@
         <v-app id="inspire">
             <v-navigation-drawer v-model="drawer" fixed app>
                 <v-list dense>
-                    <v-list-tile @click="">
+                    <v-list-tile @click="" href="/ui/">
                         <v-list-tile-action>
-                            <v-icon>home</v-icon>
+                            <v-icon>poll</v-icon>
                         </v-list-tile-action>
                         <v-list-tile-content>
-                            <v-list-tile-title>Home</v-list-tile-title>
+                            <v-list-tile-title>Reports</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                    <v-list-tile @click="" href="/ui/victimize.html">
+                        <v-list-tile-action>
+                            <v-icon>poll</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>New</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
                 </v-list>
@@ -49,7 +57,7 @@
                                 <v-flex>
                                     <v-card flat>
                                         <v-card-text>
-                                            <h4>{{ monkeyData }}</h4>
+                                            <!-- <h4>{{ monkeyData }}</h4> -->
                                             <!-- <h4>rep: {{ reports }}</h4>
                                             <h4>err: {{ errored }} </h4>
                                             <h4>loading: {{ loading }}</h4> -->

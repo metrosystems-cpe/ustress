@@ -1,0 +1,232 @@
+<html lang="en">
+
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+    <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <style>
+        p.wordwrap {
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="monkey-data">
+        <v-app id="inspire">
+            <v-navigation-drawer v-model="drawer" fixed app>
+                <v-list dense>
+                    <v-list-tile @click="" href="/ui/">
+                        <v-list-tile-action>
+                            <v-icon>poll</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Reports</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                    <v-list-tile @click="" href="/ui/victimize.html">
+                        <v-list-tile-action>
+                            <v-icon>poll</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>New</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
+
+            <v-toolbar color="indigo" height=48 dark fixed app>
+                <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
+                <v-toolbar-title>Reliability Engineering | REST Monkey</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn icon>
+                    <v-icon>git</v-icon>
+                </v-btn>
+            </v-toolbar>
+
+
+
+            <v-content>
+                <v-container grid-list-xl text-xs-center>
+                    <v-layout row wrap>
+                        <v-flex tag="h1" class="headline">REST Monkey Reports</v-flex>
+                        <v-flex d-flex xs12 order-xs5>
+                            <v-layout column>
+
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-text>
+                                            <h4>{{ store.wsConnection }}</h4>
+                                            <div v-if="store.wsConnection">
+                                                <v-tooltip bottom>
+                                                    <v-icon slot="activator" dark color="green">info</v-icon>
+                                                    <span>connected</span>
+                                                </v-tooltip>
+                                            </div>
+                                            <div v-else>
+                                                <v-tooltip bottom>
+                                                    <v-icon slot="activator" dark color="red">error</v-icon>
+                                                    <span>disconnected</span>
+                                                </v-tooltip>
+                                            </div>
+
+                                            <!-- <h4>{{ store.monkeyData }}</h4> -->
+                                            <!-- <h4>{{ store.monkeyWorkerDataTableData }}</h4> -->
+                                            <!-- <h4>UUID: {{ store.monkeyData.uuid }}</h4> -->
+                                            <!-- <h4>err: {{ errored }} </h4>
+                                            <h4>loading: {{ loading }}</h4> -->
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-text>
+                                            <form>
+                                                <v-text-field v-model="monkeyconfig.url" label="URL" required></v-text-field>
+                                                <v-text-field v-model="monkeyconfig.requests" label="Requests" required></v-text-field>
+                                                <v-text-field v-model="monkeyconfig.workers" label="Workers" required></v-text-field>
+                                                <v-text-field v-model="monkeyconfig.resolve" :rules="IPaddressRule" value="IP:PORT" label="Resolve"></v-text-field>
+                                                <v-checkbox v-model="monkeyconfig.insecure" label="Insecure" type="checkbox"></v-checkbox>
+
+                                                <v-btn @click="submitNewVictim(monkeyconfig)">submit</v-btn>
+                                                <v-btn @click="clearSubmitForm">clear</v-btn>
+                                            </form>
+                                            {{ monkeyconfig }}
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
+                                <!-- <div> -->
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-title>
+                                            <h4>Report Details</h4>
+                                        </v-card-title>
+                                        <v-divider></v-divider>
+                                        <v-card-text>
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <div>
+                                                        <p class="text-lg-left">UUID:</p>
+                                                    </div>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <div>
+                                                        <p class="text-lg-right">{{ store.monkeyData.uuid }}</p>
+                                                    </div>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <div>
+                                                        <p class="text-lg-left">TimeStamp:</p>
+                                                    </div>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <div>
+                                                        <p class="text-lg-right">{{ store.monkeyData.timestamp }}</p>
+                                                    </div>
+                                                </v-flex>
+                                            </v-layout>
+                                            <v-layout>
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <div>
+                                                        <p class="text-lg-left">Total duration:</p>
+                                                    </div>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <div>
+                                                        <p class="text-lg-right">{{ store.monkeyData.durationTotal }}</p>
+                                                    </div>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-title>
+                                            <h4>Monkey Config</h4>
+                                        </v-card-title>
+                                        <v-divider></v-divider>
+                                        <v-card-text>
+                                            <v-layout v-for="(value, key) in store.monkeyData.config" :key="key">
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <div>
+                                                        <p class="text-lg-left">{{ key }}</p>
+                                                    </div>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <div>
+                                                        <p class="text-lg-right wordwrap">{{ value }}</p>
+                                                    </div>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <v-card-title>
+                                            <h4>Monkey Statistics</h4>
+                                        </v-card-title>
+                                        <v-divider></v-divider>
+                                        <v-card-text>
+                                            <v-layout v-for="(value, key) in store.monkeyData.stats" :key="key">
+                                                <v-flex xs3 sm3 md3 lg3 xl3>
+                                                    <div>
+                                                        <p class="text-lg-left">{{ key }}</p>
+                                                    </div>
+                                                </v-flex>
+                                                <v-flex xs9 sm9 md9 lg9 xl9>
+                                                    <div>
+                                                        <p class="text-lg-right">{{ value }}</p>
+                                                    </div>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-flex>
+
+                                <v-flex>
+                                    <v-card flat>
+                                        <template>
+                                            <v-data-table :headers="monkeyWorkerDataTableHeader" :items="store.monkeyWorkerDataTableData" item-key="store.monkeyWorkerDataTableData.requests"
+                                                class="elevation-1" prev-icon="chevron_left" next-icon="chevron_right" sort-icon="mdi-menu-down"
+                                                :rows-per-page-items='[25,50,75,100,{"text":"All","value":-1}]'>
+                                                <template slot="items" slot-scope="props">
+                                                    <td class="text-xs-right">{{ props.item.request }}</td>
+                                                    <td class="text-xs-right">{{ props.item.status }}</td>
+                                                    <td class="text-xs-right">{{ props.item.thread }}</td>
+                                                    <td class="text-xs-right">{{ props.item.duration }}</td>
+                                                    <td class="text-xs-left">{{ props.item.error }}</td>
+                                                </template>
+                                            </v-data-table>
+                                        </template>
+                                    </v-card>
+                                </v-flex>
+                                <!-- </div> -->
+
+
+                            </v-layout>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+            </v-content>
+            <v-footer color="black" app>
+                <span class="white--text">&copy; 2017</span>
+            </v-footer>
+        </v-app>
+    </div>
+
+</body>
+
+<script src="https://unpkg.com/vue"></script>
+<!-- <script src="https://unpkg.com/vuex@2.0.0"></script> -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
+<script type='text/javascript' src='victimize.js'></script>
