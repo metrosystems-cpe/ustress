@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
 	"github.com/ashwanthkumar/slack-go-webhook"
 )
 

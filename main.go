@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"time"
 
-	"git.metrosystems.net/reliability-engineering/traffic-monkey/internal"
-	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
+	"git.metrosystems.net/reliability-engineering/rest-monkey/internal"
+	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
 )
 
 func healthHandler(wr http.ResponseWriter, req *http.Request) {

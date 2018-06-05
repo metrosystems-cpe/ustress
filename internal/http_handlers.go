@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
-	"git.metrosystems.net/reliability-engineering/traffic-monkey/slackNotifier"
+	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	"git.metrosystems.net/reliability-engineering/rest-monkey/slackNotifier"
 )
 
 var (
