@@ -7,8 +7,9 @@ import (
 	"sync"
 	"time"
 
-	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
 	"github.com/google/uuid"
+	"golang.org/x/net/context"
 	"golang.org/x/net/websocket"
 )
 
@@ -65,6 +66,35 @@ func WsServer(ws *websocket.Conn) {
 	}
 }
 
+// NewWebsocketStressReport ...
+func (mk *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
+	start := time.Now()
+	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mk}
+
+	q := make(chan *message, mk.Threads)
+	// start number of threads
+	for i := 1; i <= mk.Threads; i++ {
+		go processMessages(i, q)
+	}
+
+	// send requests to q
+	for k := 1; k <= mk.Requests; k++ {
+		ctx := context.Background()
+		wrk := Worker{Request: k, mkcfg: mk}
+		newRequest(ctx, wrk, q, &report)
+	}
+	close(q)
+	report.calcStats()
+	report.Duration = time.Since(start).Seconds()
+	b, err := json.Marshal(report)
+	if err != nil {
+		return nil, err
+	}
+	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
+	fmt.Fprintf(fileWriter, string(b))
+	return b, nil
+}
+
 func newReportSimulation() {
 	start := time.Now()
 	Report := Report{
@@ -77,7 +107,7 @@ func newReportSimulation() {
 	}
 
 	for i := 0; i < 100; i++ {
-		worker := Worker{Request: i, Status: 200, Thread: 1, url: "https://idam.metrosystems.net/.well-known/openid-configuration", insecure: false, Duration: 0.002153429}
+		worker := Worker{Request: i, Status: 200, Thread: 1, Duration: 0.002153429, Error: ""}
 		Report.Workers = append(Report.Workers, &worker)
 		fmt.Printf("append worker: %#v\n", worker)
 		Report.calcStats()

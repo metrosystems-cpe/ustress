@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	log "git.metrosystems.net/reliability-engineering/traffic-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
 
 	"github.com/google/uuid"
 
@@ -53,14 +53,12 @@ type MonkeyConfig struct {
 
 // Worker details, needed for returning the output and build the report
 type Worker struct {
-	Request  int     `json:"request"`
-	Status   int     `json:"status"` // json:"status,omitempty"
-	Thread   int     `json:"thread"`
-	url      string  // should use net.url
-	resolve  string  // ip:port
-	insecure bool    // insecure request, does not check the certificate
-	Duration float64 `json:"duration"`
-	Error    string  `json:"error"` //`json:"error,omitempty"`
+	Request  int           `json:"request"`
+	Status   int           `json:"status"` // json:"status,omitempty"
+	Thread   int           `json:"thread"`
+	Duration float64       `json:"duration"`
+	Error    string        `json:"error"` //`json:"error,omitempty"`
+	mkcfg    *MonkeyConfig // monkey cfg
 }
 
 // Report is the report structure, object
@@ -113,7 +111,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 	tr := &http.Transport{}
 
 	// insecure request
-	if wrk.insecure {
+	if wrk.mkcfg.Insecure {
 		tr = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -126,9 +124,9 @@ func (wrk *Worker) doWork(id int) *Worker {
 	}
 
 	// log.Println(wrk.resolve)
-	if wrk.resolve != "" {
+	if wrk.mkcfg.Resolve != "" {
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, wrk.resolve)
+			return dialer.DialContext(ctx, network, wrk.mkcfg.Resolve)
 		}
 	}
 
@@ -136,7 +134,7 @@ func (wrk *Worker) doWork(id int) *Worker {
 		Timeout:   time.Duration(2 * time.Second),
 		Transport: tr,
 	}
-	httpResponse, error := client.Get(wrk.url)
+	httpResponse, error := client.Get(wrk.mkcfg.URL)
 	// log.Println(httpResponse.Header, error)
 	if error != nil {
 		wrk.Error = error.Error()
@@ -212,27 +210,21 @@ func (rep *Report) calcStats() *Report {
 	return rep
 }
 
-// NewURLStressReport probes an endpoint and generates a new report
-func (mk *MonkeyConfig) NewURLStressReport() ([]byte, error) {
-	// @toDo refactor vars
-	url := mk.URL
-	requests := mk.Requests
-	threads := mk.Threads
-
+// NewRESTStressReport probes an endpoint and generates a new report
+func (mk *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	start := time.Now()
 	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mk}
 
-	q := make(chan *message, threads)
+	q := make(chan *message, mk.Threads)
 	// start number of threads
-	for i := 1; i <= threads; i++ {
+	for i := 1; i <= mk.Threads; i++ {
 		go processMessages(i, q)
 	}
 
 	// send requests to q
-	for k := 1; k <= requests; k++ {
-		ctx := context.Background()
-		wrk := Worker{url: url, Request: k, resolve: mk.Resolve, insecure: mk.Insecure} // fuck ! all this logic is stupid
-		newRequest(ctx, wrk, q, &report)
+	for k := 1; k <= mk.Requests; k++ {
+		wrk := Worker{Request: k, mkcfg: mk}
+		newRequest(context.Background(), wrk, q, &report)
 	}
 	close(q)
 	report.calcStats()

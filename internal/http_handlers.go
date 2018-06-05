@@ -82,7 +82,7 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 
 	log.LogWithFields.Debugf("%+v", mk)
 
-	messages, _ := mk.NewURLStressReport()
+	messages, _ := mk.NewRESTStressReport()
 	log.LogWithFields.Debugf(string(messages))
 	slackNotifier.DeliverReport(
 		slackNotifier.RawParams{
