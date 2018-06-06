@@ -73,7 +73,7 @@ var worker = new Vue({
             monkeyconfig :{
                 url: '',
                 requests: 4,
-                workers: 4,
+                threads: 4,
                 insecure: false,
                 resolve: ''
             },
@@ -121,7 +121,8 @@ var worker = new Vue({
         },
         submitNewVictim: function () {
             // TODO SOME VALIDATION
-            // console.log(JSON.stringify(this.monkeyconfig))
+            console.log(this.monkeyconfig)
+            console.log(JSON.stringify(this.monkeyconfig))
             socket.send(JSON.stringify(this.monkeyconfig))
         },
         clearSubmitForm: function() {
@@ -129,7 +130,7 @@ var worker = new Vue({
             this.monkeyconfig =  {
                 url: '',
                 requests: 4,
-                workers: 4,
+                threads: 4,
                 insecure: false,
                 resolve: ''
             }

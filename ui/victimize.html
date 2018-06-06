@@ -85,8 +85,8 @@
                                         <v-card-text>
                                             <form>
                                                 <v-text-field v-model="monkeyconfig.url" label="URL" required></v-text-field>
-                                                <v-text-field v-model="monkeyconfig.requests" label="Requests" required></v-text-field>
-                                                <v-text-field v-model="monkeyconfig.workers" label="Workers" required></v-text-field>
+                                                <v-text-field type="number" v-model.number="monkeyconfig.requests" label="Requests" required></v-text-field>
+                                                <v-text-field type="number" v-model.number="monkeyconfig.threads" label="Threads" required></v-text-field>
                                                 <v-text-field v-model="monkeyconfig.resolve" :rules="IPaddressRule" value="IP:PORT" label="Resolve"></v-text-field>
                                                 <v-checkbox v-model="monkeyconfig.insecure" label="Insecure" type="checkbox"></v-checkbox>
 
