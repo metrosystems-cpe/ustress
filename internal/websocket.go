@@ -43,6 +43,7 @@ func writeAll(msg string) {
 		// err := websocket.Message.Send(conn, t)
 		if err != nil {
 			log.LogWithFields.Error(err.Error())
+			rmConn(conn)
 		}
 	}
 }
@@ -92,11 +93,11 @@ func WsServer(ws *websocket.Conn) {
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			fmt.Println("work accepted")
-			fmt.Printf("Got message: %#v\n", mkcfg)
+			log.LogWithFields.Infof("Work Accepted: %#v\n", mkcfg)
+			b, _ := mkcfg.NewWebsocketStressReport()
+			writeAll(string(b))
 		}
-		// b, _ := mkcfg.NewWebsocketStressReport()
-		// writeAll(string(b))
+
 	}
 }
 
