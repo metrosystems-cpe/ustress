@@ -11,7 +11,6 @@ import (
 
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
 	"github.com/google/uuid"
-	"golang.org/x/net/context"
 	"golang.org/x/net/websocket"
 )
 
@@ -49,25 +48,25 @@ func writeAll(msg string) {
 }
 
 // ValidateConfig ...
-func (mk *MonkeyConfig) ValidateConfig() error {
-	_, err := url.ParseRequestURI(mk.URL)
+func (mkcfg *MonkeyConfig) ValidateConfig() error {
+	_, err := url.ParseRequestURI(mkcfg.URL)
 	if err != nil {
 		return fmt.Errorf("param: URL is not a valid url")
 	}
-	if reflect.TypeOf(mk.Requests).Kind() != reflect.Int {
+	if reflect.TypeOf(mkcfg.Requests).Kind() != reflect.Int {
 		return fmt.Errorf("param: requests is of wrong type, must be int")
 	}
-	if mk.Requests <= 0 {
+	if mkcfg.Requests <= 0 {
 		return fmt.Errorf("param: requests <= 0")
 	}
-	if reflect.TypeOf(mk.Threads).Kind() != reflect.Int {
+	if reflect.TypeOf(mkcfg.Threads).Kind() != reflect.Int {
 		return fmt.Errorf("param: workers is of wrong type, must be int")
 	}
-	if mk.Threads <= 0 {
+	if mkcfg.Threads <= 0 {
 		return fmt.Errorf("param: workers <= 0 ")
 	}
-	if mk.Requests < mk.Threads {
-		mk.Threads = mk.Requests
+	if mkcfg.Requests < mkcfg.Threads {
+		mkcfg.Threads = mkcfg.Requests
 	}
 	return nil
 }
@@ -102,54 +101,56 @@ func WsServer(ws *websocket.Conn) {
 }
 
 // NewWebsocketStressReport ...
-func (mk *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
+func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	start := time.Now()
-	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mk}
+	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mkcfg}
 
-	q := make(chan *message, mk.Threads)
+	requests := make(chan Worker, mkcfg.Requests)
+	response := make(chan Worker, mkcfg.Requests)
 	// start number of threads
-	for i := 1; i <= mk.Threads; i++ {
-		go processMessages(i, q)
+	for w := 1; w <= mkcfg.Threads; w++ {
+		go doWork(w, requests, response)
 	}
 
-	// send requests to q
-	for k := 1; k <= mk.Requests; k++ {
-		ctx := context.Background()
-		worker := Worker{Request: k, mkcfg: mk}
-
-		r := make(chan *message)
-		select {
-		case <-ctx.Done():
-			fmt.Println("Context ended before q could see message")
-		case q <- &message{
-			responseChan: r,
-			worker:       worker,
-			// We are placing a context in a struct.  This is ok since it
-			// is only stored as a passed message and we want q to know
-			// when it can discard this message
-			ctx: ctx,
-		}:
+	// send work to request channel
+	fmt.Println(mkcfg.Requests)
+	go func() {
+		for req := 1; req <= mkcfg.Requests; req++ {
+			requests <- Worker{Request: req, mkcfg: *mkcfg}
 		}
+		// close(requests) // daca inchid canalul apar mesaje in plus
+		return
+	}()
 
-		select {
-		case out := <-r:
-			// fmt.Printf("%v\n", out)
-			report.Workers = append(report.Workers, &out.worker)
-			// this is CPU cycles consuming because it calculates stats after each worker finishes the work but it is cool :)
-			report.calcStats()
-			report.Duration = time.Since(start).Seconds()
-			b, err := json.Marshal(report)
-			if err != nil {
-				return nil, err
+	// A go routine to update the report at a given interval
+	cancel := make(chan bool)
+	go func() {
+		for {
+			// fmt.Printf("\n%d\n %+v\n\n", len(report.Workers), report)
+			select {
+			case <-cancel:
+				return
+			default:
+				time.Sleep(500 * time.Millisecond)
+
+				// create a snapshot of the current report
+				tempReport := report
+				tempReport.calcStats()
+				tempReport.Duration = time.Since(start).Seconds()
+				b, err := json.Marshal(tempReport)
+				if err != nil {
+					return
+				}
+				writeAll(string(b))
 			}
-			writeAll(string(b))
-		// If the context finishes before we could get the result, exit early
-		case <-ctx.Done():
-			fmt.Println("Context ended before q could process message")
 		}
+	}()
 
+	for res := 1; res <= mkcfg.Requests; res++ {
+		report.Workers = append(report.Workers, <-response)
 	}
-	close(q)
+	cancel <- true
+	// close(response)
 
 	report.calcStats()
 	report.Duration = time.Since(start).Seconds()
@@ -161,31 +162,3 @@ func (mk *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	fmt.Fprintf(fileWriter, string(b))
 	return b, nil
 }
-
-// func newReportSimulation() {
-// 	start := time.Now()
-// 	Report := Report{
-// 		TimeStamp: time.Now(),
-// 		UUID:      uuid.New(),
-// 		Workers:   []*Worker{},
-// 		MonkeyConfig: MonkeyConfig{
-// 			Requests: 10,
-// 		},
-// 	}
-
-// 	for i := 0; i < 100; i++ {
-// 		worker := Worker{Request: i, Status: 200, Thread: 1, Duration: 0.002153429, Error: ""}
-// 		Report.Workers = append(Report.Workers, &worker)
-// 		fmt.Printf("append worker: %#v\n", worker)
-// 		Report.calcStats()
-// 		Report.Duration = time.Since(start).Seconds()
-// 		b, err := json.Marshal(Report)
-// 		if err != nil {
-// 			log.LogWithFields.Error(err.Error())
-// 		}
-
-// 		writeAll(string(b))
-// 		time.Sleep(200 * time.Millisecond)
-// 	}
-
-// }

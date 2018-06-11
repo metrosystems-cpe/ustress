@@ -30,13 +30,6 @@ const (
 	HTTPfolder = "./data/"
 )
 
-// the structure that will be passed to channels
-type message struct {
-	responseChan chan<- *message
-	worker       Worker
-	ctx          context.Context
-}
-
 // MonkeyConfig structure
 type MonkeyConfig struct {
 	// URL to probe
@@ -53,12 +46,12 @@ type MonkeyConfig struct {
 
 // Worker details, needed for returning the output and build the report
 type Worker struct {
-	Request  int           `json:"request"`
-	Status   int           `json:"status"` // json:"status,omitempty"
-	Thread   int           `json:"thread"`
-	Duration float64       `json:"duration"`
-	Error    string        `json:"error"` //`json:"error,omitempty"`
-	mkcfg    *MonkeyConfig // monkey cfg
+	Request  int          `json:"request"`
+	Status   int          `json:"status"` // json:"status,omitempty"
+	Thread   int          `json:"thread"`
+	Duration float64      `json:"duration"`
+	Error    string       `json:"error"` //`json:"error,omitempty"`
+	mkcfg    MonkeyConfig // monkey cfg
 }
 
 // Report is the report structure, object
@@ -76,102 +69,60 @@ type Report struct {
 		ErrorPercentage float64 `json:"error_percentage"`
 	} `json:"stats"`
 
-	Duration float64   `json:"durationTotal"`
-	Workers  []*Worker `json:"data"`
-}
-
-func processMessages(id int, work <-chan *message) {
-	for job := range work {
-		select {
-		// If the context is finished, don't bother processing the
-		// message.
-		case <-job.ctx.Done():
-			continue
-		default:
-		}
-
-		job.worker.doWork(id)
-
-		select {
-		case <-job.ctx.Done():
-		case job.responseChan <- job:
-		}
-	}
+	Duration float64  `json:"durationTotal"`
+	Workers  []Worker `json:"data"`
 }
 
 // doWork method for the worker
-func (wrk *Worker) doWork(id int) *Worker {
+func doWork(thread int, request <-chan Worker, response chan<- Worker) {
 	// every new worker has a new http client.
+	for {
+		start := time.Now()
+		wrk := <-request
+		fmt.Printf("%+v\n", wrk)
 
-	start := time.Now()
-	wrk.Thread = id
+		wrk.Thread = thread
 
-	// curl -v -k --resolve "idam-pp.metrosystems.net:443:10.29.30.8"  'https://idam-pp.metrosystems.net:443/.well-known/openid-configuration' --insecure
+		// curl -v -k --resolve "idam-pp.metrosystems.net:443:10.29.30.8"  'https://idam-pp.metrosystems.net:443/.well-known/openid-configuration' --insecure
 
-	tr := &http.Transport{}
+		tr := &http.Transport{}
 
-	// insecure request
-	if wrk.mkcfg.Insecure {
-		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		// insecure request
+		if wrk.mkcfg.Insecure {
+			tr = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
 		}
-	}
 
-	dialer := &net.Dialer{
-		Timeout:   2 * time.Second,
-		KeepAlive: 0 * time.Second,
-		DualStack: true,
-	}
-
-	// log.Println(wrk.resolve)
-	if wrk.mkcfg.Resolve != "" {
-		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, wrk.mkcfg.Resolve)
+		dialer := &net.Dialer{
+			Timeout:   2 * time.Second,
+			KeepAlive: 0 * time.Second,
+			DualStack: true,
 		}
-	}
 
-	client := http.Client{
-		Timeout:   time.Duration(2 * time.Second),
-		Transport: tr,
-	}
-	httpResponse, error := client.Get(wrk.mkcfg.URL)
-	// log.Println(httpResponse.Header, error)
-	if error != nil {
-		wrk.Error = error.Error()
-	} else {
-		wrk.Status = httpResponse.StatusCode
-	}
-	wrk.Duration = time.Since(start).Seconds()
-	log.LogWithFields.Debugf("Worker Reporting: %+v", *wrk) // @todo add report uuid to worker
-	// fmt.Printf("%+v\n", *wrk)
-	return wrk
-}
+		// log.Println(wrk.resolve)
+		if wrk.mkcfg.Resolve != "" {
+			tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, network, wrk.mkcfg.Resolve)
+			}
+		}
 
-func newRequest(ctx context.Context, worker Worker, q chan<- *message, report *Report) {
-	r := make(chan *message)
-	select {
-	// If the context finishes before we can send msg onto q,
-	// exit early
-	case <-ctx.Done():
-		fmt.Println("Context ended before q could see message")
-		return
-	case q <- &message{
-		responseChan: r,
-		worker:       worker,
-		// We are placing a context in a struct.  This is ok since it
-		// is only stored as a passed message and we want q to know
-		// when it can discard this message
-		ctx: ctx,
-	}:
-	}
-
-	select {
-	case out := <-r:
-		// fmt.Printf("%v\n", out)
-		report.Workers = append(report.Workers, &out.worker)
-	// If the context finishes before we could get the result, exit early
-	case <-ctx.Done():
-		fmt.Println("Context ended before q could process message")
+		client := http.Client{
+			Timeout:   time.Duration(2 * time.Second),
+			Transport: tr,
+		}
+		// fmt.Println(wrk.mkcfg.URL)
+		httpResponse, error := client.Get(wrk.mkcfg.URL)
+		// log.Println(httpResponse.Header, error)
+		if error != nil {
+			wrk.Error = error.Error()
+		} else {
+			wrk.Status = httpResponse.StatusCode
+		}
+		wrk.Duration = time.Since(start).Seconds()
+		log.LogWithFields.Debugf("Worker Reporting: %+v", wrk) // @todo add report uuid to worker
+		// fmt.Printf("%+v\n", *wrk)
+		response <- wrk
 	}
 }
 
@@ -211,22 +162,30 @@ func (rep *Report) calcStats() *Report {
 }
 
 // NewRESTStressReport probes an endpoint and generates a new report
-func (mk *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
+func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	start := time.Now()
-	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mk}
+	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mkcfg}
 
-	q := make(chan *message, mk.Threads)
+	requests := make(chan Worker, mkcfg.Requests)
+	response := make(chan Worker, mkcfg.Requests)
 	// start number of threads
-	for i := 1; i <= mk.Threads; i++ {
-		go processMessages(i, q)
+	for w := 1; w <= mkcfg.Threads; w++ {
+		go doWork(w, requests, response)
 	}
 
 	// send requests to q
-	for k := 1; k <= mk.Requests; k++ {
-		wrk := Worker{Request: k, mkcfg: mk}
-		newRequest(context.Background(), wrk, q, &report)
+	go func() {
+		for req := 1; req <= mkcfg.Requests; req++ {
+			wrk := Worker{Request: req}
+			requests <- wrk
+		}
+		close(requests)
+	}()
+
+	for res := 1; res <= mkcfg.Requests; res++ {
+		report.Workers = append(report.Workers, <-response)
 	}
-	close(q)
+
 	report.calcStats()
 	report.Duration = time.Since(start).Seconds()
 	b, err := json.Marshal(report)
