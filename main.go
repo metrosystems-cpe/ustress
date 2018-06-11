@@ -28,6 +28,10 @@ func prometheusHandler(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.Path)
 	wr.WriteHeader(http.StatusOK)
 }
+func testHandler(wr http.ResponseWriter, req *http.Request) {
+	time.Sleep(250 * time.Millisecond)
+	wr.WriteHeader(http.StatusOK)
+}
 
 func reports(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.RawPath)
@@ -97,6 +101,7 @@ func main() {
 	mux.Handle("/ws", websocket.Handler(internal.WsServer))
 
 	mux.HandleFunc("/probe", internal.URLStress)
+	mux.HandleFunc("/test", testHandler)
 
 	mux.HandleFunc("/api/v1/reports", reports)
 

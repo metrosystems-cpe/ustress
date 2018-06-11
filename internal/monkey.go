@@ -23,6 +23,11 @@ import (
 
 var (
 	ctx context.Context
+	tr  = &http.Transport{
+		MaxIdleConns:        30, // this should be set as the number of go routines
+		MaxIdleConnsPerHost: 30,
+	}
+	client = &http.Client{}
 )
 
 const (
@@ -79,13 +84,9 @@ func doWork(thread int, request <-chan Worker, response chan<- Worker) {
 	for {
 		start := time.Now()
 		wrk := <-request
-		fmt.Printf("%+v\n", wrk)
+		// fmt.Printf("%+v\n", wrk)
 
 		wrk.Thread = thread
-
-		// curl -v -k --resolve "idam-pp.metrosystems.net:443:10.29.30.8"  'https://idam-pp.metrosystems.net:443/.well-known/openid-configuration' --insecure
-
-		tr := &http.Transport{}
 
 		// insecure request
 		if wrk.mkcfg.Insecure {
@@ -100,14 +101,14 @@ func doWork(thread int, request <-chan Worker, response chan<- Worker) {
 			DualStack: true,
 		}
 
-		// log.Println(wrk.resolve)
+		// resolve ip
 		if wrk.mkcfg.Resolve != "" {
 			tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return dialer.DialContext(ctx, network, wrk.mkcfg.Resolve)
 			}
 		}
 
-		client := http.Client{
+		client = &http.Client{
 			Timeout:   time.Duration(2 * time.Second),
 			Transport: tr,
 		}
@@ -176,7 +177,7 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	// send requests to q
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
-			wrk := Worker{Request: req}
+			wrk := Worker{Request: req, mkcfg: *mkcfg}
 			requests <- wrk
 		}
 		close(requests)

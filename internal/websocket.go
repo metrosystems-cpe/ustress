@@ -113,7 +113,7 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	}
 
 	// send work to request channel
-	fmt.Println(mkcfg.Requests)
+	// fmt.Println(mkcfg.Requests)
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
 			requests <- Worker{Request: req, mkcfg: *mkcfg}
