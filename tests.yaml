@@ -34,3 +34,8 @@ tests:
 # // de-dus2 - http
 # http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.131.12.23:80&url=http://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
 # http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.131.12.23:80&requests=1000&workers=20&url=http%3A%2F%2Fidam.metrosystems.net%2Fweb%2FSignin%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
+
+
+
+
+# /probe?requests=1000&workers=20&url=http://reliability-pp-proxy.apps-api-k8s-001-test0-platform-gb-lon1.metroscales.io/docs/

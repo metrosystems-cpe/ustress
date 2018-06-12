@@ -60,7 +60,7 @@ jq '.["data"]' $file | grep status | sort | uniq -c; done
 7. save report by posting it to slack
 
 ```
-http://localhost:9090/probe?insecure=true&resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
+http://localhost:8080/probe?insecure=true&resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
 
-http://localhost:9090/probe?url=http://localhost:9090&requests=10&workers=4
+http://localhost:8080/probe?url=http://localhost:8080&requests=10&workers=4
 ```

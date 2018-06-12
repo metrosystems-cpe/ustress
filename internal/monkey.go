@@ -49,8 +49,8 @@ type MonkeyConfig struct {
 	Insecure bool
 }
 
-// Worker details, needed for returning the output and build the report
-type Worker struct {
+// WorkerConfig structure is used to track worker work
+type WorkerConfig struct {
 	Request  int          `json:"request"`
 	Status   int          `json:"status"` // json:"status,omitempty"
 	Thread   int          `json:"thread"`
@@ -74,17 +74,19 @@ type Report struct {
 		ErrorPercentage float64 `json:"error_percentage"`
 	} `json:"stats"`
 
-	Duration float64  `json:"durationTotal"`
-	Workers  []Worker `json:"data"`
+	Duration float64        `json:"durationTotal"`
+	Workers  []WorkerConfig `json:"data"`
 }
 
-// doWork method for the worker
-func doWork(thread int, request <-chan Worker, response chan<- Worker) {
+// function for the concurent goroutines
+// request channel it is used to receive work
+// response channel is used to send back the work done
+// id is the routine id, named thread for easy uderstanding
+func work(thread int, request <-chan WorkerConfig, response chan<- WorkerConfig) {
 	for {
 		start := time.Now()
 		wrk := <-request
 		// fmt.Printf("%+v\n", wrk)
-
 		wrk.Thread = thread
 
 		// insecure request
@@ -166,17 +168,17 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	start := time.Now()
 	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mkcfg}
 
-	requests := make(chan Worker, mkcfg.Requests)
-	response := make(chan Worker, mkcfg.Requests)
+	requests := make(chan WorkerConfig, mkcfg.Requests)
+	response := make(chan WorkerConfig, mkcfg.Requests)
 	// start number of threads
 	for w := 1; w <= mkcfg.Threads; w++ {
-		go doWork(w, requests, response)
+		go work(w, requests, response)
 	}
 
 	// send requests to q
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
-			wrk := Worker{Request: req, mkcfg: *mkcfg}
+			wrk := WorkerConfig{Request: req, mkcfg: *mkcfg}
 			requests <- wrk
 		}
 		// close(requests)
@@ -192,15 +194,15 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
+	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
 	fmt.Fprintf(fileWriter, string(b))
 	return b, nil
 }
 
 // NewFile returns a new file to write data to
-func NewFile(filename string) *os.File {
+func newFile(filename string) *os.File {
 
-	CreateDirIfNotExist(HTTPfolder)
+	createDirIfNotExist(HTTPfolder)
 	f, err := os.Create(HTTPfolder + filename)
 	f, err = os.OpenFile(HTTPfolder+filename, os.O_RDWR|os.O_APPEND, 0766) // For read access.
 	if err != nil {
@@ -211,7 +213,7 @@ func NewFile(filename string) *os.File {
 }
 
 // CreateDirIfNotExist the function name says it all
-func CreateDirIfNotExist(dir string) {
+func createDirIfNotExist(dir string) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {

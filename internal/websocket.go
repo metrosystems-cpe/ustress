@@ -71,7 +71,7 @@ func (mkcfg *MonkeyConfig) ValidateConfig() error {
 	return nil
 }
 
-// WsServer ...
+// WsServer handles the ws connections
 func WsServer(ws *websocket.Conn) {
 	addConn(ws)
 	for {
@@ -100,29 +100,31 @@ func WsServer(ws *websocket.Conn) {
 	}
 }
 
-// NewWebsocketStressReport ...
+// NewWebsocketStressReport will returin a report via websocket
+// It is configured from the websocket handler
 func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	start := time.Now()
 	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *mkcfg}
 
-	requests := make(chan Worker, mkcfg.Requests)
-	response := make(chan Worker, mkcfg.Requests)
+	requests := make(chan WorkerConfig, mkcfg.Requests)
+	response := make(chan WorkerConfig, mkcfg.Requests)
 	// start number of threads
 	for w := 1; w <= mkcfg.Threads; w++ {
-		go doWork(w, requests, response)
+		go work(w, requests, response)
 	}
 
 	// send work to request channel
 	// fmt.Println(mkcfg.Requests)
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
-			requests <- Worker{Request: req, mkcfg: *mkcfg}
+			requests <- WorkerConfig{Request: req, mkcfg: *mkcfg}
 		}
 		// close(requests) // daca inchid canalul apar mesaje in plus
 		return
 	}()
 
-	// A go routine to update the report at a given interval
+	// a go routine to update the report sent via websocket at a given interval
+	// the goroutine it is canceled once the cancel channel receives a true statement
 	cancel := make(chan bool)
 	go func() {
 		for {
@@ -148,16 +150,20 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	for res := 1; res <= mkcfg.Requests; res++ {
 		report.Workers = append(report.Workers, <-response)
 	}
+	// cancel the update go rutine
+	// from this point fw the websocket is updated from the socket handler
 	cancel <- true
 	// close(response)
-
-	report.calcStats()
+	report.calcStats() //TODO - > return errors
 	report.Duration = time.Since(start).Seconds()
+	// marshal the report
 	b, err := json.Marshal(report)
 	if err != nil {
 		return nil, err
 	}
-	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
+	// save report to file
+	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
 	fmt.Fprintf(fileWriter, string(b))
+	// return json report
 	return b, nil
 }
