@@ -80,7 +80,6 @@ type Report struct {
 
 // doWork method for the worker
 func doWork(thread int, request <-chan Worker, response chan<- Worker) {
-	// every new worker has a new http client.
 	for {
 		start := time.Now()
 		wrk := <-request
@@ -180,7 +179,7 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 			wrk := Worker{Request: req, mkcfg: *mkcfg}
 			requests <- wrk
 		}
-		close(requests)
+		// close(requests)
 	}()
 
 	for res := 1; res <= mkcfg.Requests; res++ {

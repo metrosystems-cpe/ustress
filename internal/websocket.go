@@ -134,10 +134,9 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 				time.Sleep(500 * time.Millisecond)
 
 				// create a snapshot of the current report
-				tempReport := report
-				tempReport.calcStats()
-				tempReport.Duration = time.Since(start).Seconds()
-				b, err := json.Marshal(tempReport)
+				report.calcStats()
+				report.Duration = time.Since(start).Seconds()
+				b, err := json.Marshal(report)
 				if err != nil {
 					return
 				}
