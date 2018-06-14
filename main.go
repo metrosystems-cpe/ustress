@@ -92,18 +92,27 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 
 func main() {
 	var addr = flag.String("addr", ":8080", "The addr of the application.")
+
 	flag.Parse()
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data"))))
-	mux.Handle("/ui/", http.StripPrefix("/ui/", http.FileServer(http.Dir("ui"))))
-	mux.Handle("/ws", websocket.Handler(internal.WsServer))
+	// redirect to ui
+	mux.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
+		http.Redirect(writer, req, "/restmonkey/ui/", http.StatusMovedPermanently)
+	})
+	mux.HandleFunc("/restmonkey", func(writer http.ResponseWriter, req *http.Request) {
+		http.Redirect(writer, req, "/restmonkey/ui/", http.StatusMovedPermanently)
+	})
 
-	mux.HandleFunc("/probe", internal.URLStress)
-	mux.HandleFunc("/test", testHandler)
+	mux.Handle("/restmonkey/ui/", http.StripPrefix("/restmonkey/ui/", http.FileServer(http.Dir("ui"))))
+	mux.Handle("/restmonkey/data/", http.StripPrefix("/restmonkey/data/", http.FileServer(http.Dir("data"))))
 
-	mux.HandleFunc("/api/v1/reports", reports)
+	mux.Handle("/restmonkey/api/v1/ws", websocket.Handler(internal.WsServer))
+	mux.HandleFunc("/restmonkey/api/v1/reports", reports)
+
+	mux.HandleFunc("/restmonkey/api/v1/probe", internal.URLStress)
+	mux.HandleFunc("/restmonkey/api/v1/test", testHandler)
 
 	mux.HandleFunc("/.well-known/ready", healthHandler)
 	mux.HandleFunc("/.well-known/live", healthHandler)

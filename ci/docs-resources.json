@@ -1,0 +1,15 @@
+{
+  "pp": {
+    "replicas": 3,
+    "resources": {
+      "request": {
+        "memory": "50Mi",
+        "cpu": "100m"
+      },
+      "limit": {
+        "memory": "100Mi",
+        "cpu": "200m"
+      }
+    }
+  }
+}

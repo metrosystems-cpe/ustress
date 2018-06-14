@@ -2,7 +2,7 @@
 var socket;
 // var socketResponse = {}
 
-socket = new WebSocket("ws://" + location.host + "/ws");
+socket = new WebSocket("ws://" + location.host + "/restmonkey/api/v1/ws");
 socket.onopen = function (event) {
     store.wsConn(true);
 }
@@ -71,8 +71,8 @@ var worker = new Vue({
             searchQuery: '',
             drawer: "",
             monkeyconfig :{
-                url: '',
-                requests: 4,
+                url: 'http://' + location.host + '/restmonkey/api/v1/test',
+                requests: 16,
                 threads: 4,
                 insecure: false,
                 resolve: ''
