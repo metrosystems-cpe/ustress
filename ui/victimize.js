@@ -1,8 +1,14 @@
 // when an update is received via ws connection, we update the model
 var socket;
+var socketConn;
 // var socketResponse = {}
+if (location.protocol === "https:") {
+    socketConn = "wss://"
+} else {
+    socketConn = "ws://"
+};
 
-socket = new WebSocket("ws://" + location.host + "/restmonkey/api/v1/ws");
+socket = new WebSocket(socketConn + location.host + "/restmonkey/api/v1/ws");
 socket.onopen = function (event) {
     store.wsConn(true);
 }
