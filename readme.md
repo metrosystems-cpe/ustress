@@ -1,66 +1,164 @@
-# Traffic Monkey
+# REST Monkey
 
-Web application designed to be deployed in various kubernetes clusters from where to start send traffic to an endpoint.
+Performs high load / rest tests for an endpoint using one or more concurrent requests ( only GET for now ).
 
-urlHandlers:
- - /probe          - > send a get request and the monkey will start the attack
- - /data           - > http server to report data directory (exposes report files)
- - /.well-known/*  - > live / ready / metrics (no metrics)
+## Usage
+
+Arguments:
+ - Required:
+   - url      - the endpoint to probe
+   - requests - the number of requests to be sent to an endpoint
+   - workers  - is the total number concurrent requests
+
+ Optional:
+  - insecure  - skip certificate validation in case of https  requests
+  - resolve   - similar cu curl resolve (resolves a domain to an ip:port)
 
 
+### UI:
+   - new probe request, calls monkey via a websocket connection
+   - view stored reports
 
-## Current deployment process
-
-In order to make it work, you need 2 terminal windows and to run a lot of commands :)
-
-Warning: if --rm flag (default) is set and all tty's to the kubernetes pod are interrupted the pod will be destroyed and with him all the report data
-
-
-```
-Terminal 1
-step 1 squarectl kubectl-shell -c mcc -v ccms && kubectl config get-contexts && kubectl config use-context <context>
-step 2 kubectl run sre-shell --rm -i --tty --image ubuntu:18.04 -- bash
-step 3 apt update && apt install -y curl
-step 7 ./traefikmonkey
-
-Terminal 2
-step 4 squarectl kubectl-shell -c mcc -v ccms && kubectl config get-contexts && kubectl config use-context <context> && kubectl get po
-step 5 kubectl cp ./trafficmonkey-linux-amd64 sre-shell-300457757-xk08h:/trafficmonkey
-step 6 kubectl exec -i -t sre-shell-300457757-xk08h bash
-step 8 curl 'http://localhost:9090/probe?url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=10'
-step 8 curl 'http://localhost:9090/probe?url=http://proxy.identity-prod:80/.well-known/openid-configuration&requests=1000&workers=10'
-step 8 curl 'http://localhost:9090/probe?url=http://proxy-k8s-001-live1-mcc-gb-lon1.metroscales.io:30021/.well-known/openid-configuration&requests=1000&workers=10'
-step 9 kubectl cp sre-shell-300457757-xk08h:/data/ ./data
+### Probe handler:
+Warning: if you want to probe a URL with arguments you have to URL encode it
 
 ```
+# simple request
+/restmonkey/api/v1/probe??url=http://localhost:8080&requests=10&workers=4
 
-## analyse generated data.
-
-it was designed to generate percentile statistics and not detect 503 ( application code for timeout error ) :)
-
-### analyse-data.sh
-```
-find . -type f -name "*.json" | while read file; do \
-printf " >>> file: %s\n" $file; \
-jq '."url"' $file; \
-jq '."timestamp"' $file ; \
-jq '."stats"' $file; \
-jq '.["data"]' $file | grep status | sort | uniq -c; done
+# will resolve idam to be-gcw datacenter's LB
+/restmonkey/api/v1/probe?insecure=true&resolve=10.29.80.28:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=2
 ```
 
-### Improvements
+## Reports
 
-- implement gopkg.in/alecthomas/kingpin.v2
-- implement github.com/sirupsen/logrus
 
-3. Probe handler improvement: args insecure, debug
-4. app entrypoint improvement: args insecure, debug
-5. logrus debug
-6. metrics  
-7. save report by posting it to slack
+
+```json
+{
+    "uuid": "f2b260af-305f-4c6a-9063-577593c1c882",
+    "timestamp": "2018-06-12T15:13:02.907475+03:00",
+    "config": {
+        "URL": "http://localhost:8080/restmonkey/api/v1/test",
+        "Requests": 4,
+        "Threads": 4,
+        "Resolve": "",
+        "Insecure": false
+    },
+    "stats": {
+        "median": 0.25212597,
+        "50_percentile": 0.2521247,
+        "75_percentile": 0.25212724,
+        "95_percentile": 0.2521405025,
+        "99_percentile": 0.2521405025,
+        "error_percentage": 0
+    },
+    "durationTotal": 0.502027589,
+    "data": [{
+        "request": 2,
+        "status": 200,
+        "thread": 3,
+        "duration": 0.25212724,
+        "error": ""
+    }, {
+        "request": 3,
+        "status": 200,
+        "thread": 1,
+        "duration": 0.252122993,
+        "error": ""
+    }, {
+        "request": 4,
+        "status": 200,
+        "thread": 2,
+        "duration": 0.2521247,
+        "error": ""
+    }, {
+        "request": 1,
+        "status": 200,
+        "thread": 4,
+        "duration": 0.252153765,
+        "error": ""
+    }]
+}
+
+---
+{
+    "uuid": "3a94b039-a321-4bdf-be98-813f869dd20f",
+    "timestamp": "2018-06-12T15:10:53.532581+03:00",
+    "config": {
+        "URL": "/restmonkey/api/v1/test",
+        "Requests": 4,
+        "Threads": 4,
+        "Resolve": "",
+        "Insecure": false
+    },
+    "stats": {
+        "median": 0,
+        "50_percentile": 0,
+        "75_percentile": 0,
+        "95_percentile": 0,
+        "99_percentile": 0,
+        "error_percentage": 100
+    },
+    "durationTotal": 0.507984186,
+    "data": [{
+        "request": 2,
+        "status": 0,
+        "thread": 4,
+        "duration": 0.004012851,
+        "error": "Get /restmonkey/api/v1/test: unsupported protocol scheme \"\""
+    }, {
+        "request": 3,
+        "status": 0,
+        "thread": 1,
+        "duration": 0.004014902,
+        "error": "Get /restmonkey/api/v1/test: unsupported protocol scheme \"\""
+    }, {
+        "request": 4,
+        "status": 0,
+        "thread": 3,
+        "duration": 0.004008321,
+        "error": "Get /restmonkey/api/v1/test: unsupported protocol scheme \"\""
+    }, {
+        "request": 1,
+        "status": 0,
+        "thread": 2,
+        "duration": 0.004039681,
+        "error": "Get /restmonkey/api/v1/test: unsupported protocol scheme \"\""
+    }]
+}
 
 ```
-http://localhost:8080/probe?insecure=true&resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
 
-http://localhost:8080/probe?url=http://localhost:8080&requests=10&workers=4
-```
+
+
+## HTTP Handlers
+
+@todo - swager :)
+
+| Handlers                    | Foo            | Bar            |
+| --------------------------- |:-------------- | --------------:|
+| /                           |                |                |
+| /restmonkey                 |                |                |
+| /restmonkey/ui              |                |                |
+| /restmonkey/data/           |                |                |
+| /restmonkey/api/v1/ws       |                |                |
+| /restmonkey/api/v1/reports  |                |                |
+| /restmonkey/api/v1/probe    |                |                |
+| /restmonkey/api/v1/test     |                |                |
+| /.well-known/ready          |                |                |
+| /.well-known/live           |                |                |
+| /.well-known/metrics        |                |                |
+
+
+## Improvements - contributions are welcomed
+
+- [x] slack notification
+- [ ] swager
+- [ ] abort a test if user send bad url (if firs n% of request represents 100% error rate, abort)
+- [ ] you know when you write bad code when you cannot define go tests ( #me )
+- [ ] define test in a .yaml file
+ - [ ] ability to run test in a defined period of a day / year
+ - [ ] ability to re-run tests automatically  
+- [ ] ability to make auth tests | needs advanced http client config  
+- [ ] save reports in a database with TTL
