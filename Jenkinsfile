@@ -81,7 +81,7 @@ spec:
           deployment is not configured for this app
           delete the old pod from kubernetes and the app will update
           "  
-
+          exit 0
           # source ./ci/utils.sh
           # remote_image_url=$(build_and_tag_image "pp" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
           # remote_image_url=$(tag_image "pp" "reliability" "restmonkey")
