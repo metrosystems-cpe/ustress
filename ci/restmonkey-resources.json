@@ -1,6 +1,6 @@
 {
   "pp": {
-    "replicas": 3,
+    "replicas": 1,
     "resources": {
       "request": {
         "memory": "50Mi",
