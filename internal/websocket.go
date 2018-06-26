@@ -168,8 +168,7 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 			numberOfErrors++
 		}
 		// should be percentage 20%
-		// if float64(res) == float64(mkcfg.Requests)*0.2 {
-		if res == 12 {
+		if res == mkcfg.Requests*30/100 {
 			if float64(numberOfErrors)/float64(res)*100 == float64(100) {
 				fmt.Printf("%d : %d : %v\n", numberOfErrors, res, float64(numberOfErrors)/float64(res)*100)
 				cancelReport <- true
