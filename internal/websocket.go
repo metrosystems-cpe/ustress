@@ -124,17 +124,17 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	}()
 
 	// a go routine to update the report sent via websocket at a given interval
-	// the goroutine it is canceled once the cancel channel receives a true statement
-	cancel := make(chan bool)
+	// the goroutine it is canceled once the cancelUpdatechannel receives a true statement
+	cancelUpdate := make(chan bool)
+	cancelReport := make(chan bool)
 	go func() {
 		for {
 			// fmt.Printf("\n%d\n %+v\n\n", len(report.Workers), report)
 			select {
-			case <-cancel:
+			case <-cancelUpdate:
 				return
 			default:
 				time.Sleep(500 * time.Millisecond)
-
 				// create a snapshot of the current report
 				report.calcStats()
 				report.Duration = time.Since(start).Seconds()
@@ -147,12 +147,39 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 		}
 	}()
 
+	go func() {
+		for {
+			select {
+			case <-cancelReport:
+				for range requests {
+					// drain request channel
+				}
+			default:
+				// dono
+			}
+		}
+	}()
+
+	numberOfErrors := 0
 	for res := 1; res <= mkcfg.Requests; res++ {
-		report.Workers = append(report.Workers, <-response)
+		wrkConf := <-response
+		report.Workers = append(report.Workers, wrkConf)
+		if wrkConf.Status == 0 {
+			numberOfErrors++
+		}
+		// should be percentage 20%
+		// if float64(res) == float64(mkcfg.Requests)*0.2 {
+		if res == 12 {
+			if float64(numberOfErrors)/float64(res)*100 == float64(100) {
+				fmt.Printf("%d : %d : %v\n", numberOfErrors, res, float64(numberOfErrors)/float64(res)*100)
+				cancelReport <- true
+				break
+			}
+		}
 	}
-	// cancel the update go rutine
+	// cancelUpdatethe update go rutine
 	// from this point fw the websocket is updated from the socket handler
-	cancel <- true
+	cancelUpdate <- true
 	// close(response)
 	report.calcStats() //TODO - > return errors
 	report.Duration = time.Since(start).Seconds()
