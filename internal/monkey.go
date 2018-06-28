@@ -170,6 +170,8 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 
 	requests := make(chan WorkerConfig, mkcfg.Requests)
 	response := make(chan WorkerConfig, mkcfg.Requests)
+	cancelRequest := make(chan bool)
+
 	// start number of threads
 	for w := 1; w <= mkcfg.Threads; w++ {
 		go work(w, requests, response)
@@ -184,8 +186,35 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 		// close(requests)
 	}()
 
+	go func() {
+		for {
+			select {
+			case <-cancelRequest:
+				for range requests {
+					// drain request channel
+				}
+			default:
+				// dono
+			}
+		}
+	}()
+
+	numberOfErrors := 0
+
 	for res := 1; res <= mkcfg.Requests; res++ {
-		report.Workers = append(report.Workers, <-response)
+		wrkConf := <-response
+		report.Workers = append(report.Workers, wrkConf)
+		if wrkConf.Status == 0 {
+			numberOfErrors++
+		}
+
+		if res == mkcfg.Requests*30/100 {
+			if float64(numberOfErrors)/float64(res)*100 == float64(100) {
+				fmt.Printf("%d : %d : %v\n", numberOfErrors, res, float64(numberOfErrors)/float64(res)*100)
+				cancelRequest <- true
+				break
+			}
+		}
 	}
 
 	report.calcStats()
