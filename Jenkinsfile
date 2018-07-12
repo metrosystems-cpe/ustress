@@ -86,6 +86,14 @@ spec:
         }
       }
     }
+    stage ("Deploy to PROD?"){
+      steps{
+        milestone (ordinal: 20, label: "PROD_APPROVAL_REACHED")
+        script {
+          input message: 'Should we deploy to Prod?', ok: 'Yes, please.'
+        }
+      }
+    }
     stage('deploy prod') {
       steps{
         container('docker') {
