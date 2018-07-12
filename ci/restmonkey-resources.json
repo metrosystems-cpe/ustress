@@ -11,5 +11,18 @@
         "cpu": "200m"
       }
     }
+  },
+  "prod": {
+    "replicas": 1,
+    "resources": {
+      "request": {
+        "memory": "50Mi",
+        "cpu": "100m"
+      },
+      "limit": {
+        "memory": "100Mi",
+        "cpu": "200m"
+      }
+    }
   }
 }

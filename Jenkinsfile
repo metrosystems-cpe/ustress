@@ -86,6 +86,22 @@ spec:
         }
       }
     }
+    stage('deploy prod') {
+      steps{
+        container('docker') {
+          sh '''#!/bin/bash
+          source ./ci/re-utils.sh
+          # remote_image_url=$(build_and_tag_image "prod" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
+          remote_image_url=$(tag_image "prod" "reliability" "restmonkey")
+      
+          printf "%-7s: %s %s \n" "INFO" "docker target image:tag" ${remote_image_url}
+          [[ "$remote_image_url" = "" ]] && exit 1
+          push_image_to_registry "$remote_image_url"
+          deploy_to_ds "$remote_image_url" "prod" "./ci/restmonkey-ds-payload.json" "./ci/restmonkey-resources.json"
+          '''
+        }
+      }
+    }
   }
   post {
     failure {
