@@ -1,3 +1,11 @@
+const preloaded = () => {
+    return [
+        { "url": "http://example.com", "requests": 16, "threads": 4, "insecure": true, "resolve": "", "uuid": "1" },
+        { "url": "https://platform-api.metrosystems.net/", "requests": 32, "threads": 4, "insecure": true, "resolve": "", "uuid": "2" },
+        { "url": "http://example.com?with_correct_resolver", "requests": 32, "threads": 4, "insecure": true, "resolve": "10.10.2.3:8080", "uuid": "3" },
+        { "url": "http://example.com?with_incorrect_resolver", "requests": 32, "threads": 4, "insecure": true, "resolve": "172.123.1.2", "uuid": "4" },
+    ]
+}
 // when an update is received via ws connection, we update the model
 var socket;
 var socketConn;
@@ -83,6 +91,7 @@ var worker = new Vue({
                 insecure: false,
                 resolve: ''
             },
+            preloadedTests: preloaded(),
             monkeyWorkerDataTableHeader: [{
                     text: 'request',
                     align: 'right',
@@ -126,9 +135,23 @@ var worker = new Vue({
         },
         submitNewVictim: function () {
             // TODO SOME VALIDATION
-            console.log(this.monkeyconfig)
-            console.log(JSON.stringify(this.monkeyconfig))
+            // console.log(this.monkeyconfig)
+            // console.log(JSON.stringify(this.monkeyconfig))
+
+            console.log(preloaded());
             socket.send(JSON.stringify(this.monkeyconfig))
+        },
+        fillData: function(selectedValue) {
+            let selectedTest = this.preloadedTests.find((elem) => { return elem.uuid === selectedValue });
+            if (selectedTest) {
+                this.monkeyconfig = {
+                    url: selectedTest.url,
+                    requests: selectedTest.requests,
+                    threads: selectedTest.threads,
+                    insecure: selectedTest.insecure,
+                    resolve: selectedTest.resolve
+                }
+            }
         },
         clearSubmitForm: function() {
             if (this.debug) console.log('clearMessageAction triggered')
