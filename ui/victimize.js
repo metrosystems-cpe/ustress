@@ -1,9 +1,9 @@
 const preloaded = () => {
     return [
-        { "url": "http://example.com", "requests": 16, "threads": 4, "insecure": true, "resolve": "", "uuid": "1" },
-        { "url": "https://platform-api.metrosystems.net/", "requests": 32, "threads": 4, "insecure": true, "resolve": "", "uuid": "2" },
-        { "url": "http://example.com?with_correct_resolver", "requests": 32, "threads": 4, "insecure": true, "resolve": "10.10.2.3:8080", "uuid": "3" },
-        { "url": "http://example.com?with_incorrect_resolver", "requests": 32, "threads": 4, "insecure": true, "resolve": "172.123.1.2", "uuid": "4" },
+        { "name": "Low Traffic Load", "requests": 100, "threads": 4, "insecure": false, "resolve": "", "uuid": "1" },
+        { "name": "Medium Traffic Load", "requests": 1000, "threads": 20, "insecure": false, "resolve": "", "uuid": "2" },
+        { "name": "High Traffic Load", "requests": 5000, "threads": 30, "insecure": false, "resolve": "", "uuid": "3" },
+        { "name": "Jumbo Traffic Load", "requests": 20000, "threads": 50, "insecure": false, "resolve": "", "uuid": "4" },
     ]
 }
 // when an update is received via ws connection, we update the model
@@ -145,12 +145,12 @@ var worker = new Vue({
             let selectedTest = this.preloadedTests.find((elem) => { return elem.uuid === selectedValue });
             if (selectedTest) {
                 this.monkeyconfig = {
-                    url: selectedTest.url,
                     requests: selectedTest.requests,
                     threads: selectedTest.threads,
                     insecure: selectedTest.insecure,
                     resolve: selectedTest.resolve
-                }
+                };
+                this.$nextTick(() => this.$refs.url.$el.querySelector("input").select());
             }
         },
         clearSubmitForm: function() {
