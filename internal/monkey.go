@@ -1,13 +1,10 @@
 package internal
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
-
-	"net"
 	"net/http"
-	"os"
+
 	"time"
 
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
@@ -22,12 +19,9 @@ import (
 // ctx is places in a struct, but this is ok to do.
 
 var (
-	ctx context.Context
-	tr  = &http.Transport{
-		MaxIdleConns:        30, // this should be set as the number of go routines
-		MaxIdleConnsPerHost: 30,
-	}
-	client = &http.Client{}
+	ctx        context.Context
+	httpClient = &http.Client{}
+	tr         = &http.Transport{}
 )
 
 const (
@@ -47,16 +41,18 @@ type MonkeyConfig struct {
 	Resolve string
 	// insecure
 	Insecure bool
+	// client instantiate a new http client
+	client *http.Client // `json:"-"`
 }
 
 // WorkerConfig structure is used to track worker work
 type WorkerConfig struct {
-	Request  int          `json:"request"`
-	Status   int          `json:"status"` // json:"status,omitempty"
-	Thread   int          `json:"thread"`
-	Duration float64      `json:"duration"`
-	Error    string       `json:"error"` //`json:"error,omitempty"`
-	mkcfg    MonkeyConfig // monkey cfg
+	Request  int           `json:"request"`
+	Status   int           `json:"status"` // json:"status,omitempty"
+	Thread   int           `json:"thread"`
+	Duration float64       `json:"duration"`
+	Error    string        `json:"error"` //`json:"error,omitempty"`
+	mkcfg    *MonkeyConfig // `json:"-"`     // monkey cfg
 }
 
 // Report is the report structure, object
@@ -89,32 +85,9 @@ func work(thread int, request <-chan WorkerConfig, response chan<- WorkerConfig)
 		// fmt.Printf("%+v\n", wrk)
 		wrk.Thread = thread
 
-		// insecure request
-		if wrk.mkcfg.Insecure {
-			tr = &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-		}
-
-		dialer := &net.Dialer{
-			Timeout:   2 * time.Second,
-			KeepAlive: 0 * time.Second,
-			DualStack: true,
-		}
-
-		// resolve ip
-		if wrk.mkcfg.Resolve != "" {
-			tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return dialer.DialContext(ctx, network, wrk.mkcfg.Resolve)
-			}
-		}
-
-		client = &http.Client{
-			Timeout:   time.Duration(2 * time.Second),
-			Transport: tr,
-		}
+		httpClient = wrk.mkcfg.client
 		// fmt.Println(wrk.mkcfg.URL)
-		httpResponse, error := client.Get(wrk.mkcfg.URL)
+		httpResponse, error := httpClient.Get(wrk.mkcfg.URL)
 		// log.Println(httpResponse.Header, error)
 		if error != nil {
 			wrk.Error = error.Error()
@@ -177,10 +150,11 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 		go work(w, requests, response)
 	}
 
+	mkcfg.client = mkcfg.newHTTPClient()
 	// send requests to q
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
-			wrk := WorkerConfig{Request: req, mkcfg: *mkcfg}
+			wrk := WorkerConfig{Request: req, mkcfg: mkcfg}
 			requests <- wrk
 		}
 		// close(requests)
@@ -226,27 +200,4 @@ func (mkcfg *MonkeyConfig) NewRESTStressReport() ([]byte, error) {
 	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
 	fmt.Fprintf(fileWriter, string(b))
 	return b, nil
-}
-
-// NewFile returns a new file to write data to
-func newFile(filename string) *os.File {
-
-	createDirIfNotExist(HTTPfolder)
-	f, err := os.Create(HTTPfolder + filename)
-	f, err = os.OpenFile(HTTPfolder+filename, os.O_RDWR|os.O_APPEND, 0766) // For read access.
-	if err != nil {
-		log.LogWithFields.Errorln(err.Error())
-	}
-
-	return f
-}
-
-// CreateDirIfNotExist the function name says it all
-func createDirIfNotExist(dir string) {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0755)
-		if err != nil {
-			log.LogWithFields.Errorln(err.Error())
-		}
-	}
 }

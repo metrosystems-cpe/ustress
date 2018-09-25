@@ -87,12 +87,11 @@ func WsServer(ws *websocket.Conn) {
 			}
 		}
 
-		fmt.Printf("Got message: %#v\n", mkcfg)
 		err = mkcfg.ValidateConfig()
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			log.LogWithFields.Infof("Work Accepted: %#v\n", mkcfg)
+			// log.LogWithFields.Infof("Work Accepted: %#v\n", mkcfg)
 			b, _ := mkcfg.NewWebsocketStressReport()
 			writeAll(string(b))
 		}
@@ -114,10 +113,11 @@ func (mkcfg *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	}
 
 	// send work to request channel
-	// fmt.Println(mkcfg.Requests)
+	mkcfg.client = mkcfg.newHTTPClient()
+	log.LogWithFields.Infof("Work Accepted: %#v\n", mkcfg)
 	go func() {
 		for req := 1; req <= mkcfg.Requests; req++ {
-			requests <- WorkerConfig{Request: req, mkcfg: *mkcfg}
+			requests <- WorkerConfig{Request: req, mkcfg: mkcfg}
 		}
 		// close(requests) // daca inchid canalul apar mesaje in plus
 		return

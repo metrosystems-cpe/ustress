@@ -24,7 +24,7 @@ Warning: if you want to probe a URL with arguments you have to URL encode it
 
 ```
 # simple request
-/restmonkey/api/v1/probe??url=http://localhost:8080&requests=10&workers=4
+/restmonkey/api/v1/probe?url=http://localhost:8080/restmonkey/api/v1/test&requests=10&workers=4
 
 # will resolve idam to be-gcw datacenter's LB
 /restmonkey/api/v1/probe?insecure=true&resolve=10.29.80.28:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=2
@@ -162,3 +162,13 @@ Warning: if you want to probe a URL with arguments you have to URL encode it
  - [ ] ability to re-run tests automatically  
 - [ ] ability to make auth tests | needs advanced http client config  
 - [ ] save reports in a database with TTL
+
+
+## Pprof
+
+```
+go tool pprof http://localhost:8080/debug/pprof/heap
+go tool pprof -top http://localhost:8080/debug/pprof/heap
+go tool pprof http://localhost:8080/debug/pprof/goroutine
+go tool pprof -png http://localhost:8080/debug/pprof/goroutine > out.png
+```
