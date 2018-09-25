@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"crypto/tls"
 	"net"
 	"net/http"
 	"time"
@@ -11,9 +10,13 @@ import (
 
 func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
 
+	tr = &http.Transport{
+		MaxIdleConns:        mkcfg.Threads,
+		MaxIdleConnsPerHost: mkcfg.Threads,
+	}
+
 	// resolve ip
 	if mkcfg.Resolve != "" {
-
 		dialer := &net.Dialer{
 			Timeout:   2 * time.Second,
 			KeepAlive: 0 * time.Second,
@@ -27,11 +30,7 @@ func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
 
 	// insecure request
 	if mkcfg.Insecure {
-		tr = &http.Transport{
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
-			MaxIdleConns:        mkcfg.Threads, // this should be set as the number of go routines
-			MaxIdleConnsPerHost: mkcfg.Threads,
-		}
+		tr.TLSClientConfig.InsecureSkipVerify = true
 	}
 
 	return &http.Client{
