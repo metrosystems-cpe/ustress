@@ -167,6 +167,21 @@ func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		for i := 1; i <= monkeyConfig.Threads; i++ {
+			quitWorkers <- true
+		}
+		// close channels
+		close(requests)
+		close(response)
+		close(quitWorkers)
+		close(drainRequests)
+		// close transporter
+		// @todo : on hit and run (repetitive request ) some transporter routines still
+		tr.CloseIdleConnections()
+	}()
+
 	// save report to file
 	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
 	fmt.Fprintf(fileWriter, string(b))
