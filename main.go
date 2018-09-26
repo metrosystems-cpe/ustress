@@ -14,7 +14,7 @@ import (
 	"time"
 
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
-	sv "git.metrosystems.net/reliability-engineering/rest-monkey/server"
+	rm "git.metrosystems.net/reliability-engineering/rest-monkey/restmonkey"
 )
 
 func healthHandler(wr http.ResponseWriter, req *http.Request) {
@@ -111,10 +111,10 @@ func main() {
 	mux.Handle("/restmonkey/ui/", http.StripPrefix("/restmonkey/ui/", http.FileServer(http.Dir("ui"))))
 	mux.Handle("/restmonkey/data/", http.StripPrefix("/restmonkey/data/", http.FileServer(http.Dir("data"))))
 
-	mux.Handle("/restmonkey/api/v1/ws", websocket.Handler(sv.WsServer))
+	mux.Handle("/restmonkey/api/v1/ws", websocket.Handler(rm.WsServer))
 	mux.HandleFunc("/restmonkey/api/v1/reports", reports)
 
-	mux.HandleFunc("/restmonkey/api/v1/probe", sv.URLStress)
+	mux.HandleFunc("/restmonkey/api/v1/probe", rm.URLStress)
 	mux.HandleFunc("/restmonkey/api/v1/test", testHandler)
 
 	mux.HandleFunc("/.well-known/ready", healthHandler)

@@ -1,4 +1,4 @@
-package server
+package restmonkey
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
-	"git.metrosystems.net/reliability-engineering/rest-monkey/restmonkey"
 )
 
 var (
@@ -71,8 +70,8 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	restMK := restmonkey.NewConfig(uParam, rParam, wParam, resolve, insecure)
-	messages, err := restmonkey.NewReport(restMK)
+	restMK := NewConfig(uParam, rParam, wParam, resolve, insecure)
+	messages, err := NewReport(restMK)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 	}

@@ -9,6 +9,7 @@ GITURL=$(shell git config --get remote.origin.url | sed "s/git@//g;s/\.git//g;s/
 CURRENT_DIR=$(shell pwd)
 BUILD_DIR_LINK=$(shell readlink ${BUILD_DIR})
 
+DOCKER_IMAGE_REPO       ?= peng-docker-prod.metroscales.io/reliability
 DOCKER_IMAGE_NAME       ?= ${BINARY}
 DOCKER_IMAGE_TAG        ?= latest
 
@@ -42,7 +43,7 @@ docker-run:
 docker-release:
 	@echo ">> make realease";
 	docker tag $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
-	docker push peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
+	docker push $(DOCKER_IMAGE_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
 
 # release: linux docker
 
