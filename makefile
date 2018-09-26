@@ -29,11 +29,11 @@ linux:
 
 windows:
 	@echo ">> building windows binary"
-	GOOS=windows GOARCH=amd64 go build -o ${BINARY}-windows-${GOARCH}.exe . ;
+	GOOS=windows GOARCH=${GOARCH} go build -o ${BINARY}-windows-${GOARCH}.exe . ;
 
 docker:
 	@echo ">> building docker image"
-	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f ./ci/build.Dockerfile .;
+	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f ./build.Dockerfile .;
 
 docker-run:
 	@echo ">> running docker image"
@@ -43,15 +43,6 @@ docker-release:
 	@echo ">> make realease";
 	docker tag $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
 	docker push peng-docker-prod.metroscales.io/reliability/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG);
-
-# simulate-pipeline-build:
-# 	@echo ">> simulate pipeline build"
-# 	@echo ">> $(GITURL)"
-# 	rm -rf /tmp/workspace
-# 	@echo ">> be careful git regex is more permisive than rsync"
-# 	rsync -rupE --filter=':- .gitignore' $(CURRENT_DIR)/ /tmp/workspace
-# 	# rsync -rupE --exclude={vendor,web-ui/node_modules} $(CURRENT_DIR)/ /tmp/workspace
-# 	docker run --rm -v /tmp/workspace:/mnt/workspace -w /mnt/workspace golang:1.9 ./pipeline-build.sh ;
 
 # release: linux docker
 

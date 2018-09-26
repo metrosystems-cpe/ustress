@@ -1,12 +1,12 @@
-package internal
+package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	"git.metrosystems.net/reliability-engineering/rest-monkey/restmonkey"
 )
 
 var (
@@ -48,7 +48,6 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	insecure, _ := strconv.ParseBool(urlPath.Get("insecure"))
-	// fmt.Println(insecure)
 
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
 	if rParam <= 0 {
@@ -64,8 +63,6 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 
 	resolve := urlPath.Get("resolve") // @todo validate ip:port
 
-	fmt.Println(resolve)
-
 	// limit the number of requests and number of threads.
 	if rParam > 1000 {
 		rParam = 1000
@@ -74,17 +71,12 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	mk := MonkeyConfig{
-		URL:      uParam,
-		Requests: rParam,
-		Threads:  wParam,
-		Resolve:  resolve,
-		Insecure: insecure,
+	restMK := restmonkey.NewConfig(uParam, rParam, wParam, resolve, insecure)
+	messages, err := restmonkey.NewReport(restMK)
+	if err != nil {
+		log.LogWithFields.Error(err.Error())
 	}
 
-	log.LogWithFields.Debugf("%+v", mk)
-
-	messages, _ := mk.NewRESTStressReport()
 	log.LogWithFields.Debugf(string(messages))
 	// slackNotifier.DeliverReport(
 	// 	slackNotifier.RawParams{

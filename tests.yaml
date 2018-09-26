@@ -1,41 +1,13 @@
 tests:
-  - name: idam-prod-f5
-    url: https://idam.metrosystems.net/.well-known/openid-configuration
-    requests: 1000
-    workers: 20
-    raw: ?url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-
-  - name: idam-prod-be-gcw1
-    url: https://idam.metrosystems.net/.well-known/openid-configuration
-    requests: 1000
-    workers: 20
-    insecure: true
-    resolve: 10.29.80.28
-    raw: ?insecure=true&resolve=10.29.80.28:443&url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-
-
-
-# // lb details https://confluence.metrosystems.net/display/MCLOUDP/Runtime+Services+-+be-gcw1+-+Customer+Cluster+details 
-# // F5
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?requests=4&workers=2&url=https%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2Fauthorize%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam-pp.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?requests=1000&workers=20&url=https%3A%2F%2Fidam.metrosystems.net%2Fweb%2FSignin%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
-
-# // be-gcw1
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.29.80.28:443&url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.29.80.28:443&requests=1000&workers=20&url=https%3A%2F%2Fidam.metrosystems.net%2Fweb%2FSignin%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
-
-# // gb-lon1
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.31.228.38:443&url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.31.228.38:443&requests=1000&workers=20&url=https%3A%2F%2Fidam.metrosystems.net%2Fweb%2FSignin%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
-
-# // de-dus2 - https all errors 
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.131.12.23:443&url=https://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-# // de-dus2 - http
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.131.12.23:80&url=http://idam.metrosystems.net/.well-known/openid-configuration&requests=1000&workers=20
-# http://restmonkey.apps-api-k8s-002-test9-mcc-be-gcw1.metroscales.io/probe?insecure=true&resolve=10.131.12.23:80&requests=1000&workers=20&url=http%3A%2F%2Fidam.metrosystems.net%2Fweb%2FSignin%3Fclient_id%3DTST_CLNT_1%26realm_id%3DTST_REALM%26redirect_uri%3Dhttps%3A%2F%2Fidam.metrosystems.net%2Fauthorize%2Fapi%2Foauth2%2FauthorizeTest%26user_type%3DCUST%26locale_id%3Den-US%26response_type%3Dtoken
-
-
-
-
-# /probe?requests=1000&workers=20&url=http://reliability-pp-proxy.apps-api-k8s-001-test0-platform-gb-lon1.metroscales.io/docs/
+  - name: restmonkey.com-test-1
+    url: http://restmonkey.com/restmonkey/api/v1/test
+    requests: 16
+    workers: 4
+    insecure: false
+    resolve: 127.0.0.1:8080
+  - name: restmonkey.com-test-2
+    url: http://restmonkey.com/restmonkey/api/v1/test
+    requests: 100
+    workers: 10
+    insecure: false
+    resolve: 127.0.0.1:8080

@@ -8,9 +8,6 @@ _test.go
 .DS_STORE
 *.log
 
-# Locks
-glide.lock
-
 # Builds
 /restmonkey-*
 bindata*

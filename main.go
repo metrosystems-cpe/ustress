@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"time"
 
-	"git.metrosystems.net/reliability-engineering/rest-monkey/internal"
 	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	sv "git.metrosystems.net/reliability-engineering/rest-monkey/server"
 )
 
 func healthHandler(wr http.ResponseWriter, req *http.Request) {
@@ -38,7 +38,6 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.RawQuery)
 
 	if file := req.URL.Query().Get("file"); file != "" {
-		// fmt.Println(file)
 		if match, _ := regexp.MatchString("^[a-z-0-9]+.json$", file); match == true {
 			fileData, err := ioutil.ReadFile("data/" + file)
 			if err != nil {
@@ -90,9 +89,13 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 	// wr.WriteHeader(http.StatusOK)
 }
 
-func main() {
-	var addr = flag.String("addr", ":8080", "The addr of the application.")
+func transporter() {
 
+}
+
+func main() {
+
+	var addr = flag.String("addr", ":8080", "The addr of the application.")
 	flag.Parse()
 
 	mux := http.NewServeMux()
@@ -108,10 +111,10 @@ func main() {
 	mux.Handle("/restmonkey/ui/", http.StripPrefix("/restmonkey/ui/", http.FileServer(http.Dir("ui"))))
 	mux.Handle("/restmonkey/data/", http.StripPrefix("/restmonkey/data/", http.FileServer(http.Dir("data"))))
 
-	mux.Handle("/restmonkey/api/v1/ws", websocket.Handler(internal.WsServer))
+	mux.Handle("/restmonkey/api/v1/ws", websocket.Handler(sv.WsServer))
 	mux.HandleFunc("/restmonkey/api/v1/reports", reports)
 
-	mux.HandleFunc("/restmonkey/api/v1/probe", internal.URLStress)
+	mux.HandleFunc("/restmonkey/api/v1/probe", sv.URLStress)
 	mux.HandleFunc("/restmonkey/api/v1/test", testHandler)
 
 	mux.HandleFunc("/.well-known/ready", healthHandler)
