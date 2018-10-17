@@ -67,7 +67,7 @@ func worker(thread int, quitWorkers <-chan bool, request <-chan WorkerConfig, re
 			work.Thread = thread
 
 			httpClient = work.monkeyConfig.client
-			httpClient.Timeout = 1 * time.Second
+			httpClient.Timeout = 3 * time.Second
 			httpRequest, err := http.NewRequest(http.MethodGet, work.monkeyConfig.URL, nil)
 			if err != nil {
 				return
