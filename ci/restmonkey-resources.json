@@ -7,8 +7,8 @@
         "cpu": "100m"
       },
       "limit": {
-        "memory": "100Mi",
-        "cpu": "200m"
+        "memory": "500Mi",
+        "cpu": "400m"
       }
     }
   },
@@ -20,8 +20,8 @@
         "cpu": "100m"
       },
       "limit": {
-        "memory": "100Mi",
-        "cpu": "200m"
+        "memory": "500Mi",
+        "cpu": "400m"
       }
     }
   }
