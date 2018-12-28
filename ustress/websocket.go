@@ -1,4 +1,4 @@
-package restmonkey
+package ustress
 
 import (
 	"encoding/json"
