@@ -117,7 +117,7 @@ var workers = new Vue({
     methods: {
         getReport: function (value) {
             axios
-                .get('/restmonkey/api/v1/reports?file=' + value)
+                .get('/ustress/api/v1/reports?file=' + value)
                 .then(response => {
                     this.monkeyData = response.data
                     this.monkeyWorkerDataTableData = response.data.data
@@ -145,7 +145,7 @@ var workers = new Vue({
             this.getReport(this.reportID);
         }
         axios
-            .get('/restmonkey/api/v1/reports')
+            .get('/ustress/api/v1/reports')
             .then(response => {
                 this.reports = response.data
             })
