@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
-	ustress "git.metrosystems.net/reliability-engineering/rest-monkey/ustress"
+	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 )
 
 var (

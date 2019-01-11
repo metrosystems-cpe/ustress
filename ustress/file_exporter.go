@@ -3,7 +3,7 @@ package ustress
 import (
 	"os"
 
-	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/ustress/log"
 )
 
 // NewFile returns a new file to write data to

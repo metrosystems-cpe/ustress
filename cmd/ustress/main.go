@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"git.metrosystems.net/reliability-engineering/rest-monkey/log"
-	"git.metrosystems.net/reliability-engineering/rest-monkey/ustress"
-	"git.metrosystems.net/reliability-engineering/rest-monkey/web"
+	"git.metrosystems.net/reliability-engineering/ustress/log"
+	"git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"git.metrosystems.net/reliability-engineering/ustress/web"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -23,7 +23,7 @@ var (
 	insecure = stress.Flag("stress.insecure", "Ignore invalid certificate").Bool()
 
 	webServer     = app.Command("web", "start the http server")
-	startWeb      = webServer.Flag("web.start", "Start http server.").Bool()
+	startWeb      = webServer.Flag("web.start", "Start http server.").Required().Bool()
 	listenAddress = webServer.Flag("web.listen-address", "Address on which to start the web server").Default(":8080").String()
 )
 

@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/net/websocket"
 
-	ustress "git.metrosystems.net/reliability-engineering/rest-monkey/ustress"
-	api "git.metrosystems.net/reliability-engineering/rest-monkey/web/api"
+	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
+	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
 )
 
 // MuxHandlers ...
