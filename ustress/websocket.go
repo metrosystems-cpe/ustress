@@ -1,4 +1,4 @@
-package restmonkey
+package ustress
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	"github.com/google/uuid"
 	"golang.org/x/net/websocket"
 )

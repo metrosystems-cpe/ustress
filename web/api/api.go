@@ -1,11 +1,12 @@
-package restmonkey
+package api
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 
-	log "git.metrosystems.net/reliability-engineering/rest-monkey/log"
+	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 )
 
 var (
@@ -70,19 +71,12 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	restMK := NewConfig(uParam, rParam, wParam, resolve, insecure)
-	messages, err := NewReport(restMK)
+	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure)
+	messages, err := ustress.NewReport(restMK)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 	}
 
 	log.LogWithFields.Debugf(string(messages))
-	// slackNotifier.DeliverReport(
-	// 	slackNotifier.RawParams{
-	// 		Link:       mk.URL,
-	// 		NrRequests: mk.Requests,
-	// 		NrThreads:  mk.Threads,
-	// 		Result:     messages,
-	// 	})
 	wr.Write(messages)
 }

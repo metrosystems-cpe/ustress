@@ -9,7 +9,7 @@ _test.go
 *.log
 
 # Builds
-/restmonkey-*
+/ustress-*
 bindata*
 
 # SiteBuild

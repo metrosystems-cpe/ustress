@@ -1,4 +1,4 @@
-BINARY = restmonkey
+BINARY = ustress
 GOARCH = amd64
 
 VERSION?=?
@@ -24,13 +24,17 @@ clean:
 	rm -f ${CURRENT_DIR}/${BINARY}-windows-${GOARCH}.exe
 	rm -f ${CURRENT_DIR}/${BINARY}-linux-${GOARCH}
 
+darwin:
+	@echo ">> building linux binary"
+	CGO_ENABLED=0 GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-darwin-${GOARCH} cmd/ustress/main.go ;
+
 linux:
 	@echo ">> building linux binary"
-	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-linux-${GOARCH} . ;
+	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-linux-${GOARCH} cmd/ustress/main.go ;
 
 windows:
 	@echo ">> building windows binary"
-	GOOS=windows GOARCH=${GOARCH} go build -o ${BINARY}-windows-${GOARCH}.exe . ;
+	GOOS=windows GOARCH=${GOARCH} go build -o ${BINARY}-windows-${GOARCH}.exe cmd/ustress/main.go ;
 
 docker:
 	@echo ">> building docker image"

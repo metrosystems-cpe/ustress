@@ -1,9 +1,9 @@
 const preloaded = () => {
     return [
-        { "name": "Low Traffic Load", "requests": 100, "threads": 4, "insecure": false, "resolve": "", "uuid": "1" },
-        { "name": "Medium Traffic Load", "requests": 1000, "threads": 20, "insecure": false, "resolve": "", "uuid": "2" },
-        { "name": "High Traffic Load", "requests": 5000, "threads": 30, "insecure": false, "resolve": "", "uuid": "3" },
-        { "name": "Jumbo Traffic Load", "requests": 20000, "threads": 50, "insecure": false, "resolve": "", "uuid": "4" },
+        { "name": "Low Traffic Load", "requests": 100, "threads": 10, "insecure": false, "resolve": "", "uuid": "1" },
+        { "name": "Medium Traffic Load", "requests": 1000, "threads": 10, "insecure": false, "resolve": "", "uuid": "2" },
+        { "name": "High Traffic Load", "requests": 10000, "threads": 20, "insecure": false, "resolve": "", "uuid": "3" },
+        { "name": "Jumbo Traffic Load", "requests": 20000, "threads": 20, "insecure": false, "resolve": "", "uuid": "4" },
     ]
 }
 // when an update is received via ws connection, we update the model
@@ -16,7 +16,7 @@ if (location.protocol === "https:") {
     socketConn = "ws://"
 };
 
-socket = new WebSocket(socketConn + location.host + "/restmonkey/api/v1/ws");
+socket = new WebSocket(socketConn + location.host + "/ustress/api/v1/ws");
 socket.onopen = function (event) {
     store.wsConn(true);
 }
@@ -85,7 +85,7 @@ var worker = new Vue({
             searchQuery: '',
             drawer: "",
             monkeyconfig :{
-                url: 'http://' + location.host + '/restmonkey/api/v1/test',
+                url: 'http://' + location.host + '/ustress/api/v1/test',
                 requests: 16,
                 threads: 4,
                 insecure: false,

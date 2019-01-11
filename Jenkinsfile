@@ -1,6 +1,6 @@
 pipeline {
   environment {
-    SLACK_CHANNEL = '@ionut.ilie,@bogdanb'
+    SLACK_CHANNEL = '@ionut.ilie'
   }
   agent {
     kubernetes {

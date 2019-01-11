@@ -16,7 +16,7 @@
         <v-app id="inspire">
             <v-navigation-drawer v-model="drawer" fixed app>
                 <v-list dense>
-                    <v-list-tile @click="" href="/restmonkey/ui/">
+                    <v-list-tile @click="" href="/ustress/ui/">
                         <v-list-tile-action>
                             <v-icon>poll</v-icon>
                         </v-list-tile-action>
@@ -24,7 +24,7 @@
                             <v-list-tile-title>Reports</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
-                    <v-list-tile @click="" href="/restmonkey/ui/victimize.html">
+                    <v-list-tile @click="" href="/ustress/ui/victimize.html">
                         <v-list-tile-action>
                             <v-icon>poll</v-icon>
                         </v-list-tile-action>
@@ -37,19 +37,17 @@
 
             <v-toolbar color="indigo" height=48 dark fixed app>
                 <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-                <v-toolbar-title>Reliability Engineering | REST Monkey</v-toolbar-title>
+                <v-toolbar-title>Reliability Engineering | μStress</v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-btn icon>
                     <v-icon>git</v-icon>
                 </v-btn>
             </v-toolbar>
 
-
-
             <v-content>
                 <v-container grid-list-xl text-xs-center>
                     <v-layout row wrap>
-                        <v-flex tag="h1" class="headline">REST Monkey Reports</v-flex>
+                        <v-flex tag="h1" class="headline">μStress Reports</v-flex>
                         <v-flex d-flex xs12 order-xs5>
                             <v-layout column>
 

@@ -1,4 +1,4 @@
-package restmonkey
+package ustress
 
 import (
 	"time"
@@ -7,7 +7,7 @@ import (
 	"github.com/montanaflynn/stats"
 )
 
-// Report is the report structure, object
+// Report structure
 type Report struct {
 	UUID         uuid.UUID    `json:"uuid"`
 	TimeStamp    time.Time    `json:"timestamp"`
