@@ -26,10 +26,6 @@
   version = "1.0.5"
 
 [[constraint]]
-  name = "github.com/ashwanthkumar/slack-go-webhook"
-  version = "0.2.0"
-
-[[constraint]]
   name = "github.com/google/uuid"
   version = "0.2.0"
 

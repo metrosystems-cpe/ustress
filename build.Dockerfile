@@ -7,8 +7,8 @@ RUN               make linux
 RUN               ls -al
 
 FROM              quay.io/prometheus/busybox:latest
-COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/restmonkey-linux-amd64 /restmonkey
-COPY              ui                                 /ui
+COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/ustress-linux-amd64 /ustress
+COPY              web/ui                                 /web/ui
 RUN               ls -al
 EXPOSE            8080 
-ENTRYPOINT        [ "/restmonkey" ]
+ENTRYPOINT        [ "/ustress", "web", "--web.start" ]
