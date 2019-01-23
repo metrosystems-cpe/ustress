@@ -81,7 +81,7 @@ spec:
           printf "%-7s: %s %s \n" "INFO" "docker target image:tag" ${remote_image_url}
           [[ "$remote_image_url" = "" ]] && exit 1
           push_image_to_registry "$remote_image_url"
-          deploy_to_ds "$remote_image_url" "pp" "./ci/ustress-ds-payload.json" "./ci/ustress-resources.json"
+          deploy_to_ds "$remote_image_url" "pp" "./build/ci/2tier/ustress-ds-payload.json" "./build/ci/2tier/ustress-resources.json"
           '''
         }
       }
@@ -105,7 +105,7 @@ spec:
           printf "%-7s: %s %s \n" "INFO" "docker target image:tag" ${remote_image_url}
           [[ "$remote_image_url" = "" ]] && exit 1
           push_image_to_registry "$remote_image_url"
-          deploy_to_ds "$remote_image_url" "prod" "./ci/ustress-ds-payload.json" "./ci/ustress-resources.json"
+          deploy_to_ds "$remote_image_url" "prod" "./build/ci/2tier/ustress-ds-payload.json" "./build/ci/2tier/ustress-resources.json"
           '''
         }
       }
