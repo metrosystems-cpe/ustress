@@ -1,8 +1,10 @@
 package ustress
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -26,10 +28,13 @@ const (
 	HTTPfolder = "./data/"
 )
 
+type Headers map[string]string
+
 // MonkeyConfig structure
 type MonkeyConfig struct {
 	// URL to probe
-	URL string
+	URL    string
+	Method string
 	// Number of request to be sent to the victim
 	Requests int
 	// Ho many treads to be used (dependent on the image resources)
@@ -38,6 +43,12 @@ type MonkeyConfig struct {
 	Resolve string
 	// insecure
 	Insecure bool
+
+	// payload
+	Payload string
+
+	Headers Headers
+
 	// client instantiate a new http client
 	client *http.Client // `json:"-"`
 }
@@ -52,6 +63,16 @@ type WorkerConfig struct {
 	monkeyConfig *MonkeyConfig // `json:"-"`     // monkey cfg
 }
 
+// Helper function to attach headers to request
+func setHeaders(r *http.Request, h Headers) {
+	if h == nil {
+		return
+	}
+	for k, v := range h {
+		r.Header.Set(k, v)
+	}
+}
+
 // function for the concurent goroutines
 // request channel it is used to receive work
 // response channel is used to send back the work done
@@ -63,15 +84,26 @@ func worker(thread int, quitWorkers <-chan bool, request <-chan WorkerConfig, re
 			runtime.Goexit()
 			return
 		case work := <-request:
+			var payload io.Reader
 			start := time.Now()
 			work.Thread = thread
 
+			switch work.monkeyConfig.Method {
+			case "GET", "DELETE", "OPTIONS":
+				payload = nil
+			default:
+				payload = bytes.NewBuffer([]byte(work.monkeyConfig.Payload))
+
+			}
+
 			httpClient = work.monkeyConfig.client
 			httpClient.Timeout = 3 * time.Second
-			httpRequest, err := http.NewRequest(http.MethodGet, work.monkeyConfig.URL, nil)
+			httpRequest, err := http.NewRequest(work.monkeyConfig.Method, work.monkeyConfig.URL, payload)
 			if err != nil {
 				return
 			}
+			setHeaders(httpRequest, work.monkeyConfig.Headers)
+
 			httpResponse, error := httpClient.Do(httpRequest)
 			if error != nil {
 				work.Error = error.Error()
@@ -111,13 +143,16 @@ func (monkeyConfig *MonkeyConfig) ValidateConfig() error {
 }
 
 // NewConfig ...
-func NewConfig(url string, requests int, threads int, resolve string, insecure bool) *MonkeyConfig {
+func NewConfig(url string, requests int, threads int, resolve string, insecure bool, method string, payload string, headers Headers) *MonkeyConfig {
 	monkeyConfig := &MonkeyConfig{
 		URL:      url,
 		Requests: requests,
 		Threads:  threads,
 		Resolve:  resolve,
 		Insecure: insecure,
+		Method:   method,
+		Payload:  payload,
+		Headers:  headers,
 	}
 	monkeyConfig.client = monkeyConfig.newHTTPClient()
 	return monkeyConfig

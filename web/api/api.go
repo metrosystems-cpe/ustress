@@ -2,12 +2,15 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 )
+
+var RequiredParamsMissing = errors.New("Some of the required parameters are missing")
 
 var (
 	uParam         string
@@ -38,6 +41,9 @@ func errorHandler(wr http.ResponseWriter, req *http.Request, err string) {
 func URLStress(wr http.ResponseWriter, req *http.Request) {
 	// exampleCall := "?url=http://localhost:9090&requests=20&workers=4"
 	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
+	// TODO
+	// Isolate validations
+	// Extract method, payload, headers
 	wr.Header().Set("Content-Type", "application/json")
 
 	urlPath := req.URL.Query()
@@ -71,7 +77,7 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure)
+	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, "", "", nil)
 	messages, err := ustress.NewReport(restMK)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())

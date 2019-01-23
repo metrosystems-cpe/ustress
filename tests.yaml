@@ -1,13 +1,19 @@
 tests:
+
+  # TODO Match MonkeyConfig
   - name: restmonkey.com-test-1
     url: http://restmonkey.com/restmonkey/api/v1/test
     requests: 16
     workers: 4
     insecure: false
     resolve: 127.0.0.1:8080
+    method: GET
   - name: restmonkey.com-test-2
     url: http://restmonkey.com/restmonkey/api/v1/test
     requests: 100
     workers: 10
     insecure: false
     resolve: 127.0.0.1:8080
+    method: POST
+    headers: "Content-Type: application/json;X-Custom-Header: stresstest"
+    payload: "{'Stress':'Test'}"

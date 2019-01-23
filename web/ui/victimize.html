@@ -8,6 +8,27 @@
         p.wordwrap {
             word-wrap: break-word;
         }
+        code {
+            min-height: 100px;
+            width:100%;
+            text-align: left;
+        }
+        code:focus {
+            outline: none;
+        }
+        .header {
+            display: flex;
+        }
+        .headerinput {
+            padding-right: 1rem;
+
+        }
+        .hinputs {
+            padding-right: 0.5rem;
+        }
+        form {
+            text-align: left;
+        }
     </style>
 </head>
 
@@ -82,6 +103,8 @@
                                     <v-card flat>
                                         <v-card-text>
                                             <v-card-text>
+                                                <v-select :items="httpMethods" label="Select a http method" item-text="name" item-value="uuid" max-height="auto" autocomplete clearable v-model='monkeyconfig.method'>
+                                                </v-select>
                                                 <v-select :items="preloadedTests" label="Use a preloaded test" item-text="name" item-value="uuid" single chips
                                                     max-height="auto" autocomplete clearable @change="fillData">
                                                     
@@ -108,19 +131,54 @@
                                                 </v-select>
                                             </v-card-text>
                                             <form>
+                                                <v-btn fab dark small color="primary" @click="addHeader">
+                                                    <v-icon dark>add</v-icon>
+                                                </v-btn><span>Add header</span>
+                                                <div class="headers">
+                                                    <div class="header" v-for="(i, index) in headerInputs">
+                                                        <v-text-field Label="Header" class="headerinput"></v-text-field>
+                                                        <v-text-field Label="Val" class="headerinput"></v-text-field>
+                                                        <v-btn fab dark small color="primary" @click="removeHeader(index)">
+                                                            <v-icon dark>remove</v-icon>
+                                                        </v-btn>
+                                                    </div>
+                                                </div>
                                                 <v-text-field ref="url" v-model="monkeyconfig.url" label="URL" required></v-text-field>
                                                 <v-text-field type="number" v-model.number="monkeyconfig.requests" label="Requests" required></v-text-field>
                                                 <v-text-field type="number" v-model.number="monkeyconfig.threads" label="Threads" required></v-text-field>
                                                 <v-text-field v-model="monkeyconfig.resolve" :rules="IPaddressRule" value="IP:PORT" label="Resolve"></v-text-field>
-                                                <v-checkbox v-model="monkeyconfig.insecure" label="Insecure" type="checkbox"></v-checkbox>
+                                                <code 
+                                                    id="payload" 
+                                                    v-if="monkeyconfig.method !== 'GET' && monkeyconfig.method !== 'DELETE'" 
+                                                    contenteditable=true
+                                                    v-on:keyup="savePayload"
+                                                    v-on:hover="savePayload"
+                                                    >
+    {
+        "_id": "5c479028376eef892bc389f8",
+        "index": 0,
+        "guid": "a30a0c06-ed1e-45b4-bc3e-72673f529668",
+        "isActive": false,
+        "balance": "$1,365.71",
+        "picture": "http://placehold.it/32x32",
+        "age": 31,
+        "eyeColor": "brown",
+        "name": "Fran Valdez",
+        "gender": "female",
+        "company": "XANIDE",
+    }
+                                                </code>
+                                                
+
+                                                <v-checkbox v-model="monkeyconfig.Insecure" label="Insecure" type="checkbox"></v-checkbox>
 
                                                 <v-btn @click="submitNewVictim(monkeyconfig)">submit</v-btn>
                                                 <v-btn @click="clearSubmitForm">clear</v-btn>
                                             </form>
-                                            {{ monkeyconfig }}
                                         </v-card-text>
                                     </v-card>
                                 </v-flex>
+
 
                                 <!-- <div> -->
                                 <v-flex>

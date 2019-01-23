@@ -24,9 +24,19 @@ func prometheusHandler(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.Path)
 	wr.WriteHeader(http.StatusOK)
 }
+
 func testHandler(wr http.ResponseWriter, req *http.Request) {
 	time.Sleep(250 * time.Millisecond)
-	wr.WriteHeader(http.StatusOK)
+	switch req.Method {
+	case "GET":
+		wr.WriteHeader(http.StatusOK)
+	case "POST":
+		wr.WriteHeader(http.StatusCreated)
+	case "PUT":
+		wr.WriteHeader(http.StatusAccepted)
+	case "DELETE":
+		wr.WriteHeader(http.StatusNoContent)
+	}
 }
 
 func reports(wr http.ResponseWriter, req *http.Request) {

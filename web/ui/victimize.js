@@ -1,3 +1,4 @@
+
 const preloaded = () => {
     return [
         { "name": "Low Traffic Load", "requests": 100, "threads": 10, "insecure": false, "resolve": "", "uuid": "1" },
@@ -6,6 +7,10 @@ const preloaded = () => {
         { "name": "Jumbo Traffic Load", "requests": 20000, "threads": 20, "insecure": false, "resolve": "", "uuid": "4" },
     ]
 }
+
+const httpMethods = ["GET", "POST", "PUT", "DELETE"]
+
+
 // when an update is received via ws connection, we update the model
 var socket;
 var socketConn;
@@ -72,6 +77,15 @@ var store = {
     }
 }
 
+var defaultConfig = {
+    url: 'http://' + location.host + '/ustress/api/v1/test',
+    requests: 16,
+    threads: 4,
+    insecure: false,
+    resolve: '',
+    method: 'GET',
+    payload: "",
+}
 
 var worker = new Vue({
     debug: true,
@@ -84,14 +98,10 @@ var worker = new Vue({
             store: store.state,
             searchQuery: '',
             drawer: "",
-            monkeyconfig :{
-                url: 'http://' + location.host + '/ustress/api/v1/test',
-                requests: 16,
-                threads: 4,
-                insecure: false,
-                resolve: ''
-            },
+            monkeyconfig : defaultConfig,
             preloadedTests: preloaded(),
+            httpMethods: httpMethods,
+            headerInputs: [],
             monkeyWorkerDataTableHeader: [{
                     text: 'request',
                     align: 'right',
@@ -138,18 +148,29 @@ var worker = new Vue({
             // console.log(this.monkeyconfig)
             // console.log(JSON.stringify(this.monkeyconfig))
 
+            var headers = {}
+            var headerElems = document.getElementsByClassName("header")
+            console.log(headerElems)
+            for (let i= 0; i< headerElems.length; i++) {
+                var inputs = headerElems[i].getElementsByTagName("input")
+                headers[inputs[0].value] = inputs[1].value
+                
+            }
+            
+            this.monkeyconfig.headers = headers
+            this.monkeyconfig.payload = document.getElementById('payload') ? document.getElementById('payload').innerHTML : {}
             console.log(preloaded());
             socket.send(JSON.stringify(this.monkeyconfig))
         },
         fillData: function(selectedValue) {
             let selectedTest = this.preloadedTests.find((elem) => { return elem.uuid === selectedValue });
             if (selectedTest) {
-                this.monkeyconfig = {
-                    requests: selectedTest.requests,
-                    threads: selectedTest.threads,
-                    insecure: selectedTest.insecure,
-                    resolve: selectedTest.resolve
-                };
+                let keys = Object.keys(selectedTest)
+                for (var i=0; i< keys.length;i++) {
+                    this.monkeyconfig[keys[i]] = selectedTest[keys[i]]
+                }
+                    
+
                 this.$nextTick(() => this.$refs.url.$el.querySelector("input").select());
             }
         },
@@ -162,6 +183,18 @@ var worker = new Vue({
                 insecure: false,
                 resolve: ''
             }
+        },
+
+        savePayload: function() {
+            this.monkeyconfig.payload = document.getElementById('payload').innerText
+        },
+        addHeader: function() {
+            this.headerInputs.push(true)
+        },
+        removeHeader: function(headerId) {
+            // TODO it will remove the last element regardless of which button is pressed
+            // Shall remove the wanted element
+            this.headerInputs.splice(headerId, 1);
         }
     }
     // ,

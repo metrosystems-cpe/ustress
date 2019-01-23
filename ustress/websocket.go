@@ -67,7 +67,7 @@ func WsServer(ws *websocket.Conn) {
 			fmt.Println(err)
 		} else {
 			// @todo, you can do better
-			monkeyConfig = NewConfig(monkeyConfig.URL, monkeyConfig.Requests, monkeyConfig.Threads, monkeyConfig.Resolve, monkeyConfig.Insecure)
+			monkeyConfig = NewConfig(monkeyConfig.URL, monkeyConfig.Requests, monkeyConfig.Threads, monkeyConfig.Resolve, monkeyConfig.Insecure, monkeyConfig.Method, monkeyConfig.Payload, monkeyConfig.Headers)
 			b, _ := monkeyConfig.NewWebsocketStressReport()
 			writeAll(string(b))
 		}
