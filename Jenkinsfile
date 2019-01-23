@@ -63,7 +63,7 @@ spec:
           sh '''#!/bin/bash
           source ./build/ci/2tier/re-utils.sh
           apk add -U curl git ca-certificates make
-          # docker build --network host -t restmonkey:latest -f ./ci/build.Dockerfile .
+          # docker build --network host -t ustress:latest -f ./ci/build.Dockerfile .
           make docker
           make docker-release
           '''
@@ -75,13 +75,13 @@ spec:
         container('docker') {
           sh '''#!/bin/bash
           source ./build/ci/2tier/re-utils.sh
-          # remote_image_url=$(build_and_tag_image "pp" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
-          remote_image_url=$(tag_image "pp" "reliability" "restmonkey")
+          # remote_image_url=$(build_and_tag_image "pp" "reliability" "ustress" "./ci/run-ustress.Dockerfile")
+          remote_image_url=$(tag_image "pp" "reliability" "ustress")
       
           printf "%-7s: %s %s \n" "INFO" "docker target image:tag" ${remote_image_url}
           [[ "$remote_image_url" = "" ]] && exit 1
           push_image_to_registry "$remote_image_url"
-          deploy_to_ds "$remote_image_url" "pp" "./ci/restmonkey-ds-payload.json" "./ci/restmonkey-resources.json"
+          deploy_to_ds "$remote_image_url" "pp" "./ci/ustress-ds-payload.json" "./ci/ustress-resources.json"
           '''
         }
       }
@@ -99,13 +99,13 @@ spec:
         container('docker') {
           sh '''#!/bin/bash
           source ./build/ci/2tier/re-utils.sh
-          # remote_image_url=$(build_and_tag_image "prod" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
-          remote_image_url=$(tag_image "prod" "reliability" "restmonkey")
+          # remote_image_url=$(build_and_tag_image "prod" "reliability" "ustress" "./ci/run-ustress.Dockerfile")
+          remote_image_url=$(tag_image "prod" "reliability" "ustress")
       
           printf "%-7s: %s %s \n" "INFO" "docker target image:tag" ${remote_image_url}
           [[ "$remote_image_url" = "" ]] && exit 1
           push_image_to_registry "$remote_image_url"
-          deploy_to_ds "$remote_image_url" "prod" "./ci/restmonkey-ds-payload.json" "./ci/restmonkey-resources.json"
+          deploy_to_ds "$remote_image_url" "prod" "./ci/ustress-ds-payload.json" "./ci/ustress-resources.json"
           '''
         }
       }
