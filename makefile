@@ -38,7 +38,7 @@ windows:
 
 docker:
 	@echo ">> building docker image"
-	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f ./build.Dockerfile .;
+	docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" -f ./build/package/build.Dockerfile .;
 
 docker-run:
 	@echo ">> running docker image"
