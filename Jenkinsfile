@@ -61,7 +61,7 @@ spec:
       steps {
         container('docker') {
           sh '''#!/bin/bash
-          source ./ci/re-utils.sh
+          source ./build/ci/2tier/re-utils.sh
           apk add -U curl git ca-certificates make
           # docker build --network host -t restmonkey:latest -f ./ci/build.Dockerfile .
           make docker
@@ -74,7 +74,7 @@ spec:
       steps{
         container('docker') {
           sh '''#!/bin/bash
-          source ./ci/re-utils.sh
+          source ./build/ci/2tier/re-utils.sh
           # remote_image_url=$(build_and_tag_image "pp" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
           remote_image_url=$(tag_image "pp" "reliability" "restmonkey")
       
@@ -98,7 +98,7 @@ spec:
       steps{
         container('docker') {
           sh '''#!/bin/bash
-          source ./ci/re-utils.sh
+          source ./build/ci/2tier/re-utils.sh
           # remote_image_url=$(build_and_tag_image "prod" "reliability" "restmonkey" "./ci/run-restmonkey.Dockerfile")
           remote_image_url=$(tag_image "prod" "reliability" "restmonkey")
       
