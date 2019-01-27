@@ -47,6 +47,7 @@ type MonkeyConfig struct {
 	// payload
 	Payload string
 
+	// Headers
 	Headers Headers
 
 	// client instantiate a new http client

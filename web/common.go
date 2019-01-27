@@ -40,6 +40,9 @@ func testHandler(wr http.ResponseWriter, req *http.Request) {
 }
 
 func reports(wr http.ResponseWriter, req *http.Request) {
+	// Enable CORS
+	wr.Header().Set("Access-Control-Allow-Origin", "*")
+
 	log.LogWithFields.Debug(req.URL.RawPath)
 	log.LogWithFields.Debug(req.URL.RawQuery)
 
