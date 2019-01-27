@@ -3,12 +3,24 @@ package web
 import (
 	"net/http"
 	"net/http/pprof"
+	"os"
+	"path"
 
 	"golang.org/x/net/websocket"
 
 	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
 )
+
+func serveIndex(w http.ResponseWriter, r *http.Request) {
+	requestedAsset := path.Join(r.URL.Path, "index.html")
+	_, err := os.Stat(requestedAsset)
+	if err != nil {
+		http.ServeFile(w, r, requestedAsset)
+		return
+	}
+
+}
 
 // MuxHandlers ...
 func MuxHandlers() *http.ServeMux {
@@ -20,13 +32,18 @@ func MuxHandlers() *http.ServeMux {
 
 	// redirect to ui
 	mux.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		http.Redirect(writer, req, "/ustress/ui/", http.StatusMovedPermanently)
+		http.Redirect(writer, req, "/ustress/ui/public", http.StatusMovedPermanently)
 	})
 	mux.HandleFunc("/ustress", func(writer http.ResponseWriter, req *http.Request) {
-		http.Redirect(writer, req, "/ustress/ui/", http.StatusMovedPermanently)
+		http.Redirect(writer, req, "/ustress/ui/public/", http.StatusMovedPermanently)
 	})
 
-	mux.Handle("/ustress/ui/", http.StripPrefix("/ustress/ui/", http.FileServer(http.Dir("web/ui"))))
+	// Serving static files
+	mux.Handle("/static/", http.StripPrefix("", http.FileServer(http.Dir("web/ui/build"))))
+
+	// Index file
+	mux.Handle("/ustress/ui/public/", http.StripPrefix("/ustress/ui/public/", http.FileServer(http.Dir("web/ui/build/"))))
+
 	mux.Handle("/ustress/data/", http.StripPrefix("/ustress/data/", http.FileServer(http.Dir("data"))))
 
 	mux.Handle("/ustress/api/v1/ws", websocket.Handler(ustress.WsServer))
