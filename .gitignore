@@ -17,7 +17,7 @@ site
 
 
 # UI 
-node_modules
+*node_modules*
 /.pnp
 .pnp.js
 
