@@ -44,6 +44,7 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 	// TODO
 	// Isolate validations
 	// Extract method, payload, headers
+	// More dynamicity
 	wr.Header().Set("Content-Type", "application/json")
 
 	urlPath := req.URL.Query()
@@ -69,6 +70,8 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 
 	resolve := urlPath.Get("resolve") // @todo validate ip:port
 
+	method := urlPath.Get("method") // @todo validate ip:port
+
 	// limit the number of requests and number of threads.
 	if rParam > 1000 {
 		rParam = 1000
@@ -77,12 +80,14 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, "", "", nil)
-	messages, err := ustress.NewReport(restMK)
+	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, method, "", nil, false)
+	report, err := ustress.NewReport(restMK)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 	}
 
-	log.LogWithFields.Debugf(string(messages))
-	wr.Write(messages)
+	jsonReport := report.JSON()
+	log.LogWithFields.Debug(string(jsonReport))
+	wr.Write(jsonReport)
+
 }

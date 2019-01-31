@@ -7,7 +7,7 @@ import (
 )
 
 // NewFile returns a new file to write data to
-func newFile(filename string) *os.File {
+func NewFile(filename string) *os.File {
 	createDirIfNotExist(HTTPfolder)
 	f, err := os.Create(HTTPfolder + filename)
 	f, err = os.OpenFile(HTTPfolder+filename, os.O_RDWR|os.O_APPEND, 0766) // For read access.

@@ -16,19 +16,21 @@ var (
 	verbose = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	app     = kingpin.New("stress", "A URL stress application.")
 
-	stress   = app.Command("stress", "stress a URL")
-	url      = stress.Flag("stress.url", "URL to probe.").Required().String()
-	requests = stress.Flag("stress.requests", "Number of request to be sent.").Required().Int()
-	workers  = stress.Flag("stress.workers", "Number of concurent workers").Required().Int()
-	resolve  = stress.Flag("stress.resolve", "Force resolve of HOST:PORT to ADDRESS").String()
-	insecure = stress.Flag("stress.insecure", "Ignore invalid certificate").Bool()
-	method   = stress.Flag("stress.method", "HTTP Method to use").String()
-	payload  = stress.Flag("stress.payload", "Payload to send").String()
-	headers  = stress.Flag("stress.headers", "Headers to set for request").String()
+	stress       = app.Command("stress", "stress a URL")
+	url          = stress.Flag("url", "URL to probe.").Required().String()
+	requests     = stress.Flag("requests", "Number of request to be sent.").Required().Int()
+	workers      = stress.Flag("workers", "Number of concurent workers").Required().Int()
+	resolve      = stress.Flag("resolve", "Force resolve of HOST:PORT to ADDRESS").String()
+	insecure     = stress.Flag("insecure", "Ignore invalid certificate").Bool()
+	method       = stress.Flag("method", "HTTP Method to use").String()
+	payload      = stress.Flag("payload", "Payload to send").String()
+	headers      = stress.Flag("headers", "Headers to set for request").String()
+	withResponse = stress.Flag("with-response", "To return response or not").Default("false").Bool()
 
 	webServer     = app.Command("web", "start the http server")
-	startWeb      = webServer.Flag("web.start", "Start http server.").Required().Bool()
-	listenAddress = webServer.Flag("web.listen-address", "Address on which to start the web server").Default(":8080").String()
+	startWeb      = webServer.Flag("start", "Start http server.").Required().Bool()
+	listenAddress = webServer.Flag("listen-address", "Address on which to start the web server").Default(":8080").String()
+	configPath    = webServer.Flag("config", "Path to configuration").Required().String()
 )
 
 func loadHeaders(headers string) map[string]string {
@@ -39,7 +41,7 @@ func loadHeaders(headers string) map[string]string {
 		if len(header) < 2 {
 			return nil
 		}
-		headersMap[header[0]] = header[1]
+		headersMap[strings.TrimSpace(header[0])] = strings.TrimSpace(header[1])
 	}
 	return headersMap
 }
@@ -49,17 +51,22 @@ func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	// Manual stress
 	case stress.FullCommand():
-		restMK := ustress.NewConfig(*url, *requests, *workers, *resolve, *insecure, *method, *payload, loadHeaders(*headers))
+		restMK := ustress.NewConfig(
+			*url, *requests, *workers,
+			*resolve, *insecure, *method,
+			*payload, loadHeaders(*headers), *withResponse)
 		fmt.Printf("%#v", restMK)
-		messages, err := ustress.NewReport(restMK)
+		report, err := ustress.NewReport(restMK)
 		if err != nil {
 			log.LogWithFields.Error(err.Error())
 		}
-		fmt.Println(string(messages))
+		jsonReport := report.JSON()
+		fmt.Println(string(jsonReport))
 	// start the web server
 	case webServer.FullCommand():
 		if *startWeb {
-			mux := web.MuxHandlers()
+			a := web.NewAppFromYAML(*configPath)
+			mux := web.MuxHandlers(a)
 			log.LogWithFields.Infof("Starting proxy server on: %v", *listenAddress)
 			if err := http.ListenAndServe(*listenAddress, mux); err != nil {
 				log.LogWithFields.Fatalf("ListenAndServe: %v", err.Error())

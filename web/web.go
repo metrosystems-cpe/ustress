@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/net/websocket"
 
-	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
 )
 
@@ -23,7 +22,7 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 // MuxHandlers ...
-func MuxHandlers() *http.ServeMux {
+func MuxHandlers(a *App) *http.ServeMux {
 
 	// var addr = flag.String("addr", ":8080", "The addr of the application.")
 	// flag.Parse()
@@ -46,7 +45,7 @@ func MuxHandlers() *http.ServeMux {
 
 	mux.Handle("/ustress/data/", http.StripPrefix("/ustress/data/", http.FileServer(http.Dir("data"))))
 
-	mux.Handle("/ustress/api/v1/ws", websocket.Handler(ustress.WsServer))
+	mux.Handle("/ustress/api/v1/ws", websocket.Handler(WsServer))
 	mux.HandleFunc("/ustress/api/v1/reports", reports)
 
 	mux.HandleFunc("/ustress/api/v1/probe", api.URLStress)
@@ -57,6 +56,7 @@ func MuxHandlers() *http.ServeMux {
 	mux.HandleFunc("/.well-known/metrics", prometheusHandler)
 
 	// Register pprof handlers
+
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
