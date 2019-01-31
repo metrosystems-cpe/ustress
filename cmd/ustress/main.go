@@ -14,7 +14,7 @@ import (
 
 var (
 	verbose = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
-	app     = kingpin.New("stress", "A URL stress application.")
+	app     = kingpin.New("ustress", "A URL stress application.")
 
 	stress       = app.Command("stress", "stress a URL")
 	url          = stress.Flag("url", "URL to probe.").Required().String()
