@@ -138,7 +138,7 @@ class Stress extends Component {
                 label="URL"
                 className="text-field"
                 value={this.state.config.url}
-                // onChange={this.handleChange('url')}
+                onChange={this.handleChange('url')}
                 margin="normal"
                 />
               </FormControl>

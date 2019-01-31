@@ -37,6 +37,7 @@ func testHandler(wr http.ResponseWriter, req *http.Request) {
 	case "DELETE":
 		wr.WriteHeader(http.StatusNoContent)
 	}
+	wr.Write([]byte("Test"))
 }
 
 func reports(wr http.ResponseWriter, req *http.Request) {

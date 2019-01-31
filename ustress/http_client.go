@@ -11,7 +11,7 @@ import (
 
 var (
 	httpClient = &http.Client{}
-	tr         = &http.Transport{}
+	Tr         = &http.Transport{}
 )
 
 func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
@@ -22,7 +22,7 @@ func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
 		KeepAlive: timeout,
 		DualStack: true,
 	}
-	tr = &http.Transport{
+	Tr = &http.Transport{
 		MaxIdleConns:        mkcfg.Threads,
 		MaxIdleConnsPerHost: mkcfg.Threads,
 		Dial:                (dialer).Dial,
@@ -31,21 +31,21 @@ func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
 
 	// resolve ip
 	if mkcfg.Resolve != "" {
-		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		Tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return dialer.DialContext(ctx, network, mkcfg.Resolve)
 		}
 	}
 
 	// insecure request
 	if mkcfg.Insecure {
-		tr.TLSClientConfig = &tls.Config{
+		Tr.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
 	}
 
 	return &http.Client{
 		Timeout:   timeout,
-		Transport: tr,
+		Transport: Tr,
 	}
 
 }
