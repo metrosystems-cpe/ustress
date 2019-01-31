@@ -20,6 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
+required = ["gopkg.in/yaml.v2"]
 
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
@@ -36,3 +37,9 @@
 [[constraint]]
   branch = "master"
   name = "golang.org/x/net"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gocql/gocql"
+
+
