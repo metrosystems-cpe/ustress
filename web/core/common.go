@@ -1,4 +1,4 @@
-package web
+package core
 
 import (
 	"encoding/json"
@@ -13,19 +13,19 @@ import (
 
 // common ? probably
 
-func healthHandler(wr http.ResponseWriter, req *http.Request) {
+func HealthHandlerView(wr http.ResponseWriter, req *http.Request) {
 	wr.WriteHeader(http.StatusOK)
 	wr.Header().Set("Content-Type", "application/json")
 	log.LogWithFields.Debug(req.URL.Path)
 	io.WriteString(wr, `{"Status": OK}`)
 }
 
-func prometheusHandler(wr http.ResponseWriter, req *http.Request) {
+func PrometheusHandlerView(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.Path)
 	wr.WriteHeader(http.StatusOK)
 }
 
-func testHandler(wr http.ResponseWriter, req *http.Request) {
+func TestHandlerView(wr http.ResponseWriter, req *http.Request) {
 	time.Sleep(250 * time.Millisecond)
 	switch req.Method {
 	case "GET":
@@ -40,7 +40,7 @@ func testHandler(wr http.ResponseWriter, req *http.Request) {
 	wr.Write([]byte("Test"))
 }
 
-func reports(wr http.ResponseWriter, req *http.Request) {
+func FileReportsView(wr http.ResponseWriter, req *http.Request) {
 	// Enable CORS
 	wr.Header().Set("Access-Control-Allow-Origin", "*")
 

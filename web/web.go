@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/websocket"
 
 	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
+	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 )
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +23,7 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 // MuxHandlers ...
-func MuxHandlers(a *App) *http.ServeMux {
+func MuxHandlers(a *core.App) *http.ServeMux {
 
 	// var addr = flag.String("addr", ":8080", "The addr of the application.")
 	// flag.Parse()
@@ -45,15 +46,16 @@ func MuxHandlers(a *App) *http.ServeMux {
 
 	mux.Handle("/ustress/data/", http.StripPrefix("/ustress/data/", http.FileServer(http.Dir("data"))))
 
-	mux.Handle("/ustress/api/v1/ws", websocket.Handler(WsServer))
-	mux.HandleFunc("/ustress/api/v1/reports", reports)
+	mux.Handle("/ustress/api/v1/ws", websocket.Handler(core.InjectWsContext(a, core.WsServer)))
+	mux.HandleFunc("/ustress/api/v1/file_reports", core.FileReportsView)
+	mux.HandleFunc("/ustress/api/v1/reports", core.Middleware(a, api.GetReports))
 
-	mux.HandleFunc("/ustress/api/v1/probe", api.URLStress)
-	mux.HandleFunc("/ustress/api/v1/test", testHandler)
+	mux.HandleFunc("/ustress/api/v1/probe", core.Middleware(a, api.URLStress))
+	mux.HandleFunc("/ustress/api/v1/test", core.TestHandlerView)
 
-	mux.HandleFunc("/.well-known/ready", healthHandler)
-	mux.HandleFunc("/.well-known/live", healthHandler)
-	mux.HandleFunc("/.well-known/metrics", prometheusHandler)
+	mux.HandleFunc("/.well-known/ready", core.HealthHandlerView)
+	mux.HandleFunc("/.well-known/live", core.HealthHandlerView)
+	mux.HandleFunc("/.well-known/metrics", core.PrometheusHandlerView)
 
 	// Register pprof handlers
 

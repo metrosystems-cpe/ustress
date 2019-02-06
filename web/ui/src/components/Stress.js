@@ -14,6 +14,9 @@ import Typography from '@material-ui/core/Typography';
 import PrettyPrint from './utils/prettyprint';
 import { Button, Divider } from '@material-ui/core';
 import {WS} from '../index';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+
 
 
 
@@ -49,6 +52,7 @@ class Stress extends Component {
       requests: 4,
       resolve: "",
       payload: "",
+      withResponse: false,
     },
     data: [],
     stats: {},
@@ -112,6 +116,13 @@ class Stress extends Component {
       config: {...this.state.config, [name]: val}
     });
   }
+
+  toggleCheckbox = name => event =>  {
+    this.setState({
+      config: {...this.state.config, [name]: !this.state.config[name]}
+    });
+  }
+
   removeHeader = (h) => () => {
 
 
@@ -238,9 +249,17 @@ class Stress extends Component {
                   rows={8}
                   rowsMax={16}
                 /> : null
-
-
               }
+            <FormControlLabel control={
+                <Checkbox
+                    checked={this.state.config.withResponse}
+                    onChange={this.toggleCheckbox('withResponse')}
+                    value={false}
+                    color="primary"
+                  />
+                }
+                label="Return response"
+            />
             </CardContent>
             <CardActions>
               <Button onClick={this.submitConfig} color="primary">Submit</Button>
