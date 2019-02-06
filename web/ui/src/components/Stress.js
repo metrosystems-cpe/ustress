@@ -254,7 +254,7 @@ class Stress extends Component {
                 <Checkbox
                     checked={this.state.config.withResponse}
                     onChange={this.toggleCheckbox('withResponse')}
-                    value={false}
+                    value={'false'}
                     color="primary"
                   />
                 }

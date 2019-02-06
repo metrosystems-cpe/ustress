@@ -282,12 +282,12 @@ class EnhancedTable extends React.Component {
                       role="checkbox"
                       aria-checked={isSelected}
                       tabIndex={-1}
-                      key={n.id}
+                      key={n}
                       selected={isSelected}
                     >
                       {Object.keys(n).map( c => {
                         return (
-                          <TableCell>
+                          <TableCell key={c}>
                             {n[c]}
                           </TableCell>
                         )

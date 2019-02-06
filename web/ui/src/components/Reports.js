@@ -29,36 +29,40 @@ class Reports extends Component {
     Axios
       .get('http://localhost:8080/ustress/api/v1/reports?file=' + report_id)
       .then(response => {
-        this.setState({report: response.data})
+        this.setState({...this.state, report: response.entries})
       })
       .catch(error => {
         this.errored = true
       })
       .finally(() => this.loading = false)
+  }
 
-
-
+  parseReports = (reports) => {
+    return reports.map( e => {
+      return JSON.parse(e.report)
+    })
   }
 
   getReports = () => {
     Axios
     .get('http://localhost:8080/ustress/api/v1/reports')
     .then(response => {
-      this.setState({data: response.data})
+      this.setState({...this.state, data: this.parseReports(response.data.entries)})
     })
     .catch(error => {
       console.error(error)
     })
     .finally(() => this.loading = false)
-
   }
+
   handleChange = event =>  {
+    console.log(event.target.value)
     this.setState({
-      selectedReport: event.target.value
+      selectedReport: event.target.value,
+      report: event.target.value
     })
-    this.getReport(event.target.value)
-
-
+    // FILE BACKUP
+    // this.getReport(event.target.value)
   }
 
   render() {
@@ -71,8 +75,8 @@ class Reports extends Component {
               <Select className="text-field" value={this.state.selectedReport} onChange={this.handleChange}>
                 {this.state.data.map( r => {
                   return (
-                    <ListItem key={r.file}  value={r.file}>
-                      <ListItemText primary={r.file} secondary={r.time}>
+                    <ListItem key={r.uuid}  value={r}>
+                      <ListItemText primary={r.uuid} secondary={r.timestamp}>
                       </ListItemText>
                     </ListItem>
                   ) 

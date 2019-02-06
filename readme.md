@@ -6,7 +6,7 @@ Performs high load / rest tests for an endpoint using one or more concurrent req
 
 ```console
 
-usage: stress [<flags>] <command> [<args> ...]
+usage: ustress [<flags>] <command> [<args> ...]
 
 A URL stress application.
 
