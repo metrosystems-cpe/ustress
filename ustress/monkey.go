@@ -56,7 +56,7 @@ type MonkeyConfig struct {
 	client *http.Client // `json:"-"`
 
 	// If each worker should capture response
-	WithResponse bool
+	WithResponse bool `json:"withResponse"`
 }
 
 // WorkerData structure is used to track worker work

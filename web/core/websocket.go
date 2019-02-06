@@ -1,4 +1,4 @@
-package web
+package core
 
 import (
 	"encoding/json"
@@ -47,8 +47,14 @@ func WriteAllWebsockets(msg string) {
 	}
 }
 
+func InjectWsContext(app *App, fn func(app *App, ws *websocket.Conn)) func(*websocket.Conn) {
+	return func(ws *websocket.Conn) {
+		fn(app, ws)
+	}
+}
+
 // WsServer handles the ws connections
-func WsServer(ws *websocket.Conn) {
+func WsServer(app *App, ws *websocket.Conn) {
 	addConn(ws)
 	for {
 		// var data map[string]interface{}
@@ -71,8 +77,8 @@ func WsServer(ws *websocket.Conn) {
 			monkeyConfig = ustress.NewConfig(
 				monkeyConfig.URL, monkeyConfig.Requests, monkeyConfig.Threads,
 				monkeyConfig.Resolve, monkeyConfig.Insecure, monkeyConfig.Method,
-				monkeyConfig.Payload, monkeyConfig.Headers, false)
-			b, _ := NewWebsocketStressReport(monkeyConfig)
+				monkeyConfig.Payload, monkeyConfig.Headers, monkeyConfig.WithResponse)
+			b, _ := NewWebsocketStressReport(app, monkeyConfig)
 			WriteAllWebsockets(string(b))
 		}
 
@@ -81,7 +87,8 @@ func WsServer(ws *websocket.Conn) {
 
 // NewWebsocketStressReport will returin a report via websocket
 // It is configured from the websocket handler
-func NewWebsocketStressReport(monkeyConfig *ustress.MonkeyConfig) ([]byte, error) {
+func NewWebsocketStressReport(a *App, monkeyConfig *ustress.MonkeyConfig) ([]byte, error) {
+	fmt.Println(monkeyConfig)
 	start := time.Now()
 	report := ustress.Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: monkeyConfig}
 
@@ -191,6 +198,9 @@ func NewWebsocketStressReport(monkeyConfig *ustress.MonkeyConfig) ([]byte, error
 
 	fileWriter := ustress.NewFile(fmt.Sprintf("%s.json", report.UUID))
 	defer fileWriter.Close()
+
+	stressTestReport := StressTest{ID: report.UUID, Report: &report}
+	err = stressTestReport.Save(a.Session)
 	jsonReport := report.JSON()
 	fmt.Fprintf(fileWriter, string(jsonReport))
 

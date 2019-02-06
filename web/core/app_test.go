@@ -1,4 +1,4 @@
-package web
+package core
 
 import (
 	"fmt"
@@ -7,14 +7,18 @@ import (
 	"os"
 	"testing"
 
+	"git.metrosystems.net/reliability-engineering/ustress/web"
+	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 	"github.com/stretchr/testify/assert"
 )
 
-var Config = Configuration{
-	Cluster:  []string{"127.0.0.1"},
-	Keyspace: "test",
-	Username: "cassandra",
-	Password: "cassandra",
+func newConfig(ip string) *core.Configuration {
+	return &core.Configuration{
+		Cluster:  []string{ip},
+		Keyspace: "test",
+		Username: "cassandra",
+		Password: "cassandra",
+	}
 }
 
 func makeReq(req *http.Request, router *http.ServeMux) *httptest.ResponseRecorder {
@@ -25,8 +29,8 @@ func makeReq(req *http.Request, router *http.ServeMux) *httptest.ResponseRecorde
 
 func TestInitSession(t *testing.T) {
 	// Init
-	Config.Cluster = []string{"127.0.0.2"}
-	a := NewApp("0.0.1", &Config)
+	Config := newConfig("127.0.0.2")
+	a := web.NewApp("0.0.1", Config)
 
 	// Do
 	err := a.InitSession()
@@ -37,9 +41,8 @@ func TestInitSession(t *testing.T) {
 		t.Error("Init session should have returned an error")
 
 	}
-	// Redo
-	Config.Cluster = []string{"127.0.0.1"}
-	a = NewApp("0.0.1", &Config)
+	Config = newConfig("127.0.0.1")
+	a = web.NewApp("0.0.1", Config)
 
 	err = a.InitSession()
 	assert.Nil(t, err)
@@ -47,8 +50,8 @@ func TestInitSession(t *testing.T) {
 }
 
 func TestNewAppFromYAML(t *testing.T) {
-	configpath := fmt.Sprintf("%s/%s/%s", os.Getenv("GOPATH"), "src", AppConfigPath)
-	a := NewAppFromYAML(configpath)
+	configpath := fmt.Sprintf("%s/%s/%s", os.Getenv("GOPATH"), "src", core.AppConfigPath)
+	a := web.NewAppFromYAML(configpath)
 
 	assert.NotNil(t, a.Version)
 	assert.NotNil(t, a.Configuration)
@@ -61,10 +64,11 @@ func TestNewAppFromYAML(t *testing.T) {
 
 func TestInjectContext(t *testing.T) {
 
-	a := NewApp("0.0.1", &Config)
+	Config := newConfig("127.0.0.1")
+	a := web.NewApp("0.0.1", Config)
 	mux := http.NewServeMux()
 
-	handler := func(a *App, w http.ResponseWriter, r *http.Request) {
+	handler := func(a *core.App, w http.ResponseWriter, r *http.Request) {
 		assert.NotNil(t, a)
 		if assert.NotNil(t, a.Version) {
 			assert.Equal(t, "0.0.1", a.Version)
@@ -72,8 +76,7 @@ func TestInjectContext(t *testing.T) {
 
 		}
 	}
-
-	mux.HandleFunc("/", InjectContext(a, handler))
+	mux.HandleFunc("/", core.InjectContext(a, handler))
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	makeReq(req, mux)

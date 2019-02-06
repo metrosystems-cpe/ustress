@@ -1,8 +1,11 @@
 package ustress
 
 import (
+	"fmt"
 	"testing"
 	"time"
+
+	"git.metrosystems.net/reliability-engineering/ustress/web"
 
 	"github.com/google/uuid"
 )
@@ -52,4 +55,23 @@ func TestCalcStats(t *testing.T) {
 		t.Errorf("ErrorPercentage calculation failed: expected %6f, got %6f ",
 			expectedErrorPercentage, report.Stats.ErrorPercentage)
 	}
+}
+
+func TestReportCRUD(t *testing.T) {
+	// Init
+	a := web.NewAppFromYAML("../configuration.yaml")
+	a.Init()
+	uid, _ := uuid.Parse("4a2d0805-2c06-4500-bf3f-7852dddabe50")
+	r := Report{UUID: uid}
+
+	// DO
+	err := r.SaveDB("reports", a.Session)
+
+	fmt.Println(err)
+	err = r.GetDB("reports", a.Session)
+
+	// Validate
+	fmt.Println(r)
+	fmt.Println(err)
+
 }
