@@ -1,4 +1,4 @@
-package ustress
+package core
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 	"github.com/google/uuid"
 	"golang.org/x/net/websocket"
 )
@@ -33,7 +34,7 @@ func rmConn(conn *websocket.Conn) {
 	log.LogWithFields.Info("client disconnected")
 }
 
-func writeAll(msg string) {
+func WriteAllWebsockets(msg string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	for conn := range wsConns {
@@ -46,12 +47,18 @@ func writeAll(msg string) {
 	}
 }
 
+func InjectWsContext(app *App, fn func(app *App, ws *websocket.Conn)) func(*websocket.Conn) {
+	return func(ws *websocket.Conn) {
+		fn(app, ws)
+	}
+}
+
 // WsServer handles the ws connections
-func WsServer(ws *websocket.Conn) {
+func WsServer(app *App, ws *websocket.Conn) {
 	addConn(ws)
 	for {
 		// var data map[string]interface{}
-		monkeyConfig := &MonkeyConfig{} // TODO validate mkcfg
+		monkeyConfig := &ustress.MonkeyConfig{} // TODO validate mkcfg
 
 		err := websocket.JSON.Receive(ws, &monkeyConfig)
 		if err != nil {
@@ -64,12 +71,15 @@ func WsServer(ws *websocket.Conn) {
 
 		err = monkeyConfig.ValidateConfig()
 		if err != nil {
-			fmt.Println(err)
+			log.LogError(err)
 		} else {
 			// @todo, you can do better
-			monkeyConfig = NewConfig(monkeyConfig.URL, monkeyConfig.Requests, monkeyConfig.Threads, monkeyConfig.Resolve, monkeyConfig.Insecure, monkeyConfig.Method, monkeyConfig.Payload, monkeyConfig.Headers)
-			b, _ := monkeyConfig.NewWebsocketStressReport()
-			writeAll(string(b))
+			monkeyConfig = ustress.NewConfig(
+				monkeyConfig.URL, monkeyConfig.Requests, monkeyConfig.Threads,
+				monkeyConfig.Resolve, monkeyConfig.Insecure, monkeyConfig.Method,
+				monkeyConfig.Payload, monkeyConfig.Headers, monkeyConfig.WithResponse)
+			b, _ := NewWebsocketStressReport(app, monkeyConfig)
+			WriteAllWebsockets(string(b))
 		}
 
 	}
@@ -77,26 +87,27 @@ func WsServer(ws *websocket.Conn) {
 
 // NewWebsocketStressReport will returin a report via websocket
 // It is configured from the websocket handler
-func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
+func NewWebsocketStressReport(a *App, monkeyConfig *ustress.MonkeyConfig) ([]byte, error) {
+	fmt.Println(monkeyConfig)
 	start := time.Now()
-	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *monkeyConfig}
+	report := ustress.Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: monkeyConfig}
 
-	requests := make(chan WorkerConfig, monkeyConfig.Requests)
-	response := make(chan WorkerConfig, monkeyConfig.Requests)
+	requests := make(chan ustress.WorkerData, monkeyConfig.Requests)
+	response := make(chan ustress.WorkerData, monkeyConfig.Requests)
 
 	drainRequests := make(chan bool) // true to drain requests queue
 	quitWorkers := make(chan bool)   // true to kill go routines
 
 	// start number of threads
 	for w := 1; w <= monkeyConfig.Threads; w++ {
-		go worker(w, quitWorkers, requests, response)
+		go ustress.Worker(w, quitWorkers, requests, response)
 	}
 
 	// send work to request channel
 	log.LogWithFields.Infof("Work Accepted: %#v\n", monkeyConfig)
 	go func() {
 		for req := 1; req <= monkeyConfig.Requests; req++ {
-			requests <- WorkerConfig{Request: req, monkeyConfig: monkeyConfig}
+			requests <- ustress.WorkerData{Request: req, MonkeyConfig: monkeyConfig}
 		}
 		return
 	}()
@@ -114,13 +125,13 @@ func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 			default:
 				time.Sleep(500 * time.Millisecond)
 				// create a snapshot of the current report
-				report.calcStats()
+				report.CalcStats()
 				report.Duration = time.Since(start).Seconds()
-				b, err := json.Marshal(report)
-				if err != nil {
+				b := report.JSON()
+				if len(b) == 0 {
 					return
 				}
-				writeAll(string(b))
+				WriteAllWebsockets(string(b))
 			}
 		}
 	}()
@@ -143,7 +154,10 @@ func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	numberOfErrors := 0
 	for res := 1; res <= monkeyConfig.Requests; res++ {
 		wrkConf := <-response
-		report.Workers = append(report.Workers, wrkConf)
+		if !monkeyConfig.WithResponse {
+			wrkConf.ResponseBody = ""
+		}
+		report.Data = append(report.Data, wrkConf)
 		if wrkConf.Status == 0 {
 			numberOfErrors++
 		}
@@ -160,7 +174,7 @@ func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 	// from this point fw the websocket is updated from the socket handler
 	cancelUpdate <- true
 	// close(response)
-	report.calcStats() //TODO - > return errors
+	report.CalcStats() //TODO - > return errors
 	report.Duration = time.Since(start).Seconds()
 	// marshal the report
 	b, err := json.Marshal(report)
@@ -179,12 +193,19 @@ func (monkeyConfig *MonkeyConfig) NewWebsocketStressReport() ([]byte, error) {
 		close(drainRequests)
 		// close transporter
 		// @todo : on hit and run (repetitive request ) some transporter routines still
-		tr.CloseIdleConnections()
+		ustress.Tr.CloseIdleConnections()
 	}()
 
-	// save report to file
-	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
-	fmt.Fprintf(fileWriter, string(b))
-	// return json report
-	return b, nil
+	fileWriter := ustress.NewFile(fmt.Sprintf("%s.json", report.UUID))
+	defer fileWriter.Close()
+
+	if a.Session != nil {
+		stressTestReport := StressTest{ID: report.UUID, Report: &report}
+		err = stressTestReport.Save(a.Session)
+	}
+
+	jsonReport := report.JSON()
+	fmt.Fprintf(fileWriter, string(jsonReport))
+
+	return b, err
 }

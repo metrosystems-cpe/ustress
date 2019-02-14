@@ -38,3 +38,9 @@ func logrusFieldsConfig() *logrus.Fields {
 	}
 	return &logrusFields
 }
+
+func LogError(e error) {
+	if e != nil {
+		LogWithFields.Error(e)
+	}
+}

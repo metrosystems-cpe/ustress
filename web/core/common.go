@@ -1,4 +1,4 @@
-package web
+package core
 
 import (
 	"encoding/json"
@@ -13,19 +13,19 @@ import (
 
 // common ? probably
 
-func healthHandler(wr http.ResponseWriter, req *http.Request) {
+func HealthHandlerView(wr http.ResponseWriter, req *http.Request) {
 	wr.WriteHeader(http.StatusOK)
 	wr.Header().Set("Content-Type", "application/json")
 	log.LogWithFields.Debug(req.URL.Path)
 	io.WriteString(wr, `{"Status": OK}`)
 }
 
-func prometheusHandler(wr http.ResponseWriter, req *http.Request) {
+func PrometheusHandlerView(wr http.ResponseWriter, req *http.Request) {
 	log.LogWithFields.Debug(req.URL.Path)
 	wr.WriteHeader(http.StatusOK)
 }
 
-func testHandler(wr http.ResponseWriter, req *http.Request) {
+func TestHandlerView(wr http.ResponseWriter, req *http.Request) {
 	time.Sleep(250 * time.Millisecond)
 	switch req.Method {
 	case "GET":
@@ -37,9 +37,13 @@ func testHandler(wr http.ResponseWriter, req *http.Request) {
 	case "DELETE":
 		wr.WriteHeader(http.StatusNoContent)
 	}
+	wr.Write([]byte("Test"))
 }
 
-func reports(wr http.ResponseWriter, req *http.Request) {
+func FileReportsView(wr http.ResponseWriter, req *http.Request) {
+	// Enable CORS
+	wr.Header().Set("Access-Control-Allow-Origin", "*")
+
 	log.LogWithFields.Debug(req.URL.RawPath)
 	log.LogWithFields.Debug(req.URL.RawQuery)
 
@@ -76,8 +80,8 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	type fileInfo struct {
-		File string    `json:"file"`
-		Time time.Time `json:"time"`
+		File string    `json:"uuid"`
+		Time time.Time `json:"timestamp"`
 	}
 	var filesInfo []fileInfo
 
@@ -86,6 +90,7 @@ func reports(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	data, err := json.Marshal(filesInfo)
+	log.LogError(err)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 		return
