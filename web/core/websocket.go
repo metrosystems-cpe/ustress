@@ -199,10 +199,13 @@ func NewWebsocketStressReport(a *App, monkeyConfig *ustress.MonkeyConfig) ([]byt
 	fileWriter := ustress.NewFile(fmt.Sprintf("%s.json", report.UUID))
 	defer fileWriter.Close()
 
-	stressTestReport := StressTest{ID: report.UUID, Report: &report}
-	err = stressTestReport.Save(a.Session)
+	if a.Session != nil {
+		stressTestReport := StressTest{ID: report.UUID, Report: &report}
+		err = stressTestReport.Save(a.Session)
+	}
+
 	jsonReport := report.JSON()
 	fmt.Fprintf(fileWriter, string(jsonReport))
 
-	return b, nil
+	return b, err
 }

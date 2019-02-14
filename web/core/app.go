@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -14,6 +15,8 @@ import (
 )
 
 var session *gocql.Session
+
+var NoDBConn = errors.New("No database connection")
 
 // AppConfigPath default path
 const AppConfigPath = "git.metrosystems.net/reliability-engineering/ustress/configuration.yaml"
@@ -67,7 +70,7 @@ func (a *App) Init() {
 	}
 	log.LogWithFields.Info("Creating cassandra schema")
 	a.CreateSchema()
-	defer a.Session.Close()
+	// defer a.Session.Close()
 
 }
 
@@ -101,6 +104,7 @@ func (a *App) CreateSchema() {
 
 // NewAppFromYAML inits the app from a yaml file
 func NewAppFromYAML(configpath string) *App {
+
 	var a App
 	a.load(configpath)
 	a.Init()
@@ -117,24 +121,18 @@ func NewApp(version string, c *Configuration) *App {
 // Middleware sets custom headers, and writes json response
 func Middleware(a *App, endpoint APIendpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		if a.Session.Closed() {
-			err := a.InitSession()
-			log.LogError(err)
+
+		if a.Session == nil {
+			res := newResponse(nil, NoDBConn)
+			writeResponse(w, res)
+			return
 		}
 
 		d, e := endpoint(a, w, r)
-		response := map[string]interface{}{
-			"entries": d,
-			"error":   "",
-		}
-		if e != nil {
-			response["error"] = e.Error()
-		}
-		jsonBytes, err := json.Marshal(response)
-		log.LogError(err)
-		w.Write(jsonBytes)
+		res := newResponse(d, e)
+
+		writeResponse(w, res)
+
 	}
 }
 
@@ -143,4 +141,28 @@ func (a *App) load(configpath string) {
 	log.LogError(err)
 	err = yaml.Unmarshal(yamlFile, a)
 	log.LogError(err)
+}
+
+func writeResponse(w http.ResponseWriter, response map[string]interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if response["error"] != "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	jsonBytes, err := json.Marshal(response)
+	log.LogError(err)
+	w.Write(jsonBytes)
+}
+
+func newResponse(data interface{}, err error) map[string]interface{} {
+	res := map[string]interface{}{
+		"entries": data,
+		"error":   "",
+	}
+	if err != nil {
+		res["error"] = err.Error()
+
+	}
+	return res
 }

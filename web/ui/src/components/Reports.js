@@ -27,9 +27,10 @@ class Reports extends Component {
   getReport = report_id => {
     if (!report_id) { return }
     Axios
-      .get('http://localhost:8080/ustress/api/v1/reports?file=' + report_id)
+      .get('http://localhost:8080/ustress/api/v1/file_reports?file=' + report_id)
       .then(response => {
-        this.setState({...this.state, report: response.entries})
+        console.log(response.data)
+        this.setState({...this.state, report: response.data})
       })
       .catch(error => {
         this.errored = true
@@ -47,22 +48,32 @@ class Reports extends Component {
     Axios
     .get('http://localhost:8080/ustress/api/v1/reports')
     .then(response => {
+      console.log(response)
       this.setState({...this.state, data: this.parseReports(response.data.entries)})
     })
     .catch(error => {
-      console.error(error)
+      console.log(error)
+      console.log(error.response)
+      if (error.response && error.response.status === 400) {
+        Axios.get('http://localhost:8080/ustress/api/v1/file_reports').then(res => {
+          this.setState({data: res.data.length > 0 ? res.data : []})
+        })
+
+      }
     })
     .finally(() => this.loading = false)
   }
 
   handleChange = event =>  {
     console.log(event.target.value)
+    if (event.target.value.uuid.indexOf(".json") != -1) {
+      this.getReport(event.target.value.uuid)
+      return
+    }
     this.setState({
       selectedReport: event.target.value,
       report: event.target.value
     })
-    // FILE BACKUP
-    // this.getReport(event.target.value)
   }
 
   render() {

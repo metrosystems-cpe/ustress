@@ -32,9 +32,14 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 
 	// redirect to ui
 	mux.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		http.Redirect(writer, req, "/ustress/ui/public", http.StatusMovedPermanently)
+
+		// The redirect is cached by the browser, thus most of the endpoints endup with unwanted 301
+		http.Redirect(writer, req, "/ustress", http.StatusMovedPermanently)
 	})
 	mux.HandleFunc("/ustress", func(writer http.ResponseWriter, req *http.Request) {
+		writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		writer.Header().Set("Pargma", "no-cache")
+		writer.Header().Set("Expires", "0")
 		http.Redirect(writer, req, "/ustress/ui/public/", http.StatusMovedPermanently)
 	})
 
@@ -58,7 +63,6 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 	mux.HandleFunc("/.well-known/metrics", core.PrometheusHandlerView)
 
 	// Register pprof handlers
-
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)

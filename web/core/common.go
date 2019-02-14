@@ -80,8 +80,8 @@ func FileReportsView(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	type fileInfo struct {
-		File string    `json:"file"`
-		Time time.Time `json:"time"`
+		File string    `json:"uuid"`
+		Time time.Time `json:"timestamp"`
 	}
 	var filesInfo []fileInfo
 
@@ -90,6 +90,7 @@ func FileReportsView(wr http.ResponseWriter, req *http.Request) {
 	}
 
 	data, err := json.Marshal(filesInfo)
+	log.LogError(err)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 		return

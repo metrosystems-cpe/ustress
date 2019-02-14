@@ -62,21 +62,22 @@ func TestNewAppFromYAML(t *testing.T) {
 	assert.NotNil(t, a.Session)
 }
 
-func TestInjectContext(t *testing.T) {
+func TestMiddleware(t *testing.T) {
 
 	Config := newConfig("127.0.0.1")
 	a := web.NewApp("0.0.1", Config)
 	mux := http.NewServeMux()
 
-	handler := func(a *core.App, w http.ResponseWriter, r *http.Request) {
+	handler := func(a *core.App, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 		assert.NotNil(t, a)
 		if assert.NotNil(t, a.Version) {
 			assert.Equal(t, "0.0.1", a.Version)
 			assert.Equal(t, "test", a.Configuration.Keyspace)
 
 		}
+		return nil, nil
 	}
-	mux.HandleFunc("/", core.InjectContext(a, handler))
+	mux.HandleFunc("/", core.Middleware(a, handler))
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	makeReq(req, mux)
