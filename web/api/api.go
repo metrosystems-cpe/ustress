@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
+
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 )
 
 var RequiredParamsMissing = errors.New("Some of the required parameters are missing")
@@ -38,19 +41,20 @@ func errorHandler(wr http.ResponseWriter, req *http.Request, err string) {
 }
 
 // URLStress is the handler for monkey probe
-func URLStress(wr http.ResponseWriter, req *http.Request) {
+func URLStress(a *core.App, wr http.ResponseWriter, req *http.Request) (interface{}, error) {
 	// exampleCall := "?url=http://localhost:9090&requests=20&workers=4"
 	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
 	// TODO
 	// Isolate validations
 	// Extract method, payload, headers
+	// More dynamicity
 	wr.Header().Set("Content-Type", "application/json")
 
 	urlPath := req.URL.Query()
 
 	if uParam = urlPath.Get("url"); uParam == "" {
 		errorHandler(wr, req, "missing url parameter")
-		return
+		return nil, RequiredParamsMissing
 	}
 
 	insecure, _ := strconv.ParseBool(urlPath.Get("insecure"))
@@ -58,16 +62,18 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
 	if rParam <= 0 {
 		errorHandler(wr, req, "missing requests parameter")
-		return
+		return nil, RequiredParamsMissing
 	}
 
 	wParam, _ = strconv.Atoi(urlPath.Get("workers"))
 	if wParam <= 0 {
 		errorHandler(wr, req, "missing workers parameter")
-		return
+		return nil, RequiredParamsMissing
 	}
 
 	resolve := urlPath.Get("resolve") // @todo validate ip:port
+
+	method := urlPath.Get("method") // @todo validate ip:port
 
 	// limit the number of requests and number of threads.
 	if rParam > 1000 {
@@ -77,12 +83,30 @@ func URLStress(wr http.ResponseWriter, req *http.Request) {
 		wParam = 20
 	}
 
-	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, "", "", nil)
-	messages, err := ustress.NewReport(restMK)
+	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, method, "", nil, false)
+	report, err := ustress.NewReport(restMK)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 	}
 
-	log.LogWithFields.Debugf(string(messages))
-	wr.Write(messages)
+	jsonReport := report.JSON()
+	log.LogWithFields.Debug(string(jsonReport))
+	stressTestReport := core.StressTest{ID: report.UUID, Report: &report}
+	err = stressTestReport.Save(a.Session)
+	log.LogError(err)
+	return report, err
+
+}
+
+func GetReports(a *core.App, wr http.ResponseWriter, req *http.Request) (interface{}, error) {
+	r := core.StressTest{}
+	urlPath := req.URL.Query()
+	if uParam = urlPath.Get("id"); uParam == "" {
+		return r.All(a.Session)
+	}
+	u, _ := uuid.Parse(urlPath.Get("id"))
+	r.ID = u
+	err := r.Get(a.Session)
+	return r, err
+
 }

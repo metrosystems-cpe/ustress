@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
@@ -56,6 +57,28 @@ func TestLogWithFields(t *testing.T) {
 	// assert for not nil (good when you expect something)
 	if assert.NotNil(t, logmsg.Msg) {
 		assert.Equal(t, message, logmsg.Msg)
+	}
+
+}
+
+func TestLogError(t *testing.T) {
+	// Init
+	var logmsg LogStructure
+	testError := errors.New("Test error")
+	buffer := bytes.NewBuffer(make([]byte, 0, 20))
+	logrus.SetOutput(buffer)
+
+	// Do
+	LogError(testError)
+	err := json.Unmarshal(buffer.Bytes(), &logmsg)
+
+	// Validate
+	if err != nil {
+		t.Error(err)
+	}
+
+	if assert.NotNil(t, logmsg.Msg) {
+		assert.Equal(t, testError.Error(), logmsg.Msg)
 	}
 
 }

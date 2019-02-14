@@ -4,15 +4,42 @@ Performs high load / rest tests for an endpoint using one or more concurrent req
 
 ## Usage
 
-Arguments:
- - Required:
-   - url      - the endpoint to probe
-   - requests - the number of requests to be sent to an endpoint
-   - workers  - is the total number concurrent requests
+```console
 
- Optional:
-  - insecure  - skip certificate validation in case of https  requests
-  - resolve   - similar cu curl resolve (resolves a domain to an ip:port)
+usage: ustress [<flags>] <command> [<args> ...]
+
+A URL stress application.
+
+Flags:
+  --help     Show context-sensitive help (also try --help-long and --help-man).
+  --version  Show application version.
+
+Commands:
+  help [<command>...]
+    Show help.
+
+
+  stress --url=URL --requests=REQUESTS --workers=WORKERS [<flags>]
+    stress a URL
+
+    --url=URL            URL to probe.
+    --requests=REQUESTS  Number of request to be sent.
+    --workers=WORKERS    Number of concurent workers
+    --resolve=RESOLVE    Force resolve of HOST:PORT to ADDRESS
+    --insecure           Ignore invalid certificate
+    --method=METHOD      HTTP Method to use
+    --payload=PAYLOAD    Payload to send
+    --headers=HEADERS    Headers to set for request
+    --with-response      To return response or not
+
+  web --[no-]start --config=CONFIG [<flags>]
+    start the http server
+
+    --start                   Start http server.
+    --listen-address=":8080"  Address on which to start the web server
+    --config=CONFIG           Path to configuration
+```
+
 
 ### UI:
    - new probe request, calls monkey via a websocket connection
@@ -20,6 +47,7 @@ Arguments:
 
 ### Probe handler:
 Warning: if you want to probe a URL with arguments you have to URL encode it
+
 
 ```
 # simple request

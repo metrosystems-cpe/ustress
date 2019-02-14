@@ -2,9 +2,9 @@ package ustress
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -25,8 +25,10 @@ var (
 
 const (
 	// HTTPfolder - the folder where the reports will be dumped
-	HTTPfolder = "./data/"
+	HTTPfolder = "./data/" // Would be nice to generate absolute path via code || gopath
 )
+
+type OutputSaver func(Report)
 
 type Headers map[string]string
 
@@ -47,20 +49,25 @@ type MonkeyConfig struct {
 	// payload
 	Payload string
 
+	// Headers
 	Headers Headers
 
 	// client instantiate a new http client
 	client *http.Client // `json:"-"`
+
+	// If each worker should capture response
+	WithResponse bool `json:"withResponse"`
 }
 
-// WorkerConfig structure is used to track worker work
-type WorkerConfig struct {
+// WorkerData structure is used to track worker work
+type WorkerData struct {
 	Request      int           `json:"request"`
 	Status       int           `json:"status"` // json:"status,omitempty"
 	Thread       int           `json:"thread"`
 	Duration     float64       `json:"duration"`
 	Error        string        `json:"error"` //`json:"error,omitempty"`
-	monkeyConfig *MonkeyConfig // `json:"-"`     // monkey cfg
+	ResponseBody string        `json:"response"`
+	MonkeyConfig *MonkeyConfig `json:"-"` // monkey cfg
 }
 
 // Helper function to attach headers to request
@@ -77,7 +84,7 @@ func setHeaders(r *http.Request, h Headers) {
 // request channel it is used to receive work
 // response channel is used to send back the work done
 // id is the routine id, named thread for easy uderstanding
-func worker(thread int, quitWorkers <-chan bool, request <-chan WorkerConfig, response chan<- WorkerConfig) {
+func Worker(thread int, quitWorkers <-chan bool, request <-chan WorkerData, response chan<- WorkerData) {
 	for {
 		select {
 		case <-quitWorkers:
@@ -88,21 +95,21 @@ func worker(thread int, quitWorkers <-chan bool, request <-chan WorkerConfig, re
 			start := time.Now()
 			work.Thread = thread
 
-			switch work.monkeyConfig.Method {
+			switch work.MonkeyConfig.Method {
 			case "GET", "DELETE", "OPTIONS":
 				payload = nil
 			default:
-				payload = bytes.NewBuffer([]byte(work.monkeyConfig.Payload))
+				payload = bytes.NewBuffer([]byte(work.MonkeyConfig.Payload))
 
 			}
 
-			httpClient = work.monkeyConfig.client
+			httpClient = work.MonkeyConfig.client
 			httpClient.Timeout = 3 * time.Second
-			httpRequest, err := http.NewRequest(work.monkeyConfig.Method, work.monkeyConfig.URL, payload)
+			httpRequest, err := http.NewRequest(work.MonkeyConfig.Method, work.MonkeyConfig.URL, payload)
 			if err != nil {
 				return
 			}
-			setHeaders(httpRequest, work.monkeyConfig.Headers)
+			setHeaders(httpRequest, work.MonkeyConfig.Headers)
 
 			httpResponse, error := httpClient.Do(httpRequest)
 			if error != nil {
@@ -110,7 +117,12 @@ func worker(thread int, quitWorkers <-chan bool, request <-chan WorkerConfig, re
 			} else {
 				work.Status = httpResponse.StatusCode
 				defer httpResponse.Body.Close()
+
+				bodyBytes, _ := ioutil.ReadAll(httpResponse.Body)
+				work.ResponseBody = string(bodyBytes)
+
 				httpRequest.Close = true
+
 			}
 			work.Duration = time.Since(start).Seconds()
 			response <- work
@@ -143,41 +155,46 @@ func (monkeyConfig *MonkeyConfig) ValidateConfig() error {
 }
 
 // NewConfig ...
-func NewConfig(url string, requests int, threads int, resolve string, insecure bool, method string, payload string, headers Headers) *MonkeyConfig {
+func NewConfig(
+	url string, requests int, threads int,
+	resolve string, insecure bool, method string,
+	payload string, headers Headers, withResponse bool) *MonkeyConfig {
 	monkeyConfig := &MonkeyConfig{
-		URL:      url,
-		Requests: requests,
-		Threads:  threads,
-		Resolve:  resolve,
-		Insecure: insecure,
-		Method:   method,
-		Payload:  payload,
-		Headers:  headers,
+		URL:          url,
+		Requests:     requests,
+		Threads:      threads,
+		Resolve:      resolve,
+		Insecure:     insecure,
+		Method:       method,
+		Payload:      payload,
+		Headers:      headers,
+		WithResponse: withResponse,
 	}
 	monkeyConfig.client = monkeyConfig.newHTTPClient()
 	return monkeyConfig
 }
 
 // NewReport probes an endpoint and generates a new report
-func NewReport(monkeyConfig *MonkeyConfig) ([]byte, error) {
-	start := time.Now()
-	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), MonkeyConfig: *monkeyConfig}
+func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
 
-	requests := make(chan WorkerConfig, monkeyConfig.Requests)
-	response := make(chan WorkerConfig, monkeyConfig.Requests)
+	start := time.Now()
+	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: monkeyConfig}
+
+	requests := make(chan WorkerData, monkeyConfig.Requests)
+	response := make(chan WorkerData, monkeyConfig.Requests)
 
 	drainRequests := make(chan bool) // true to drain requests queue
 	quitWorkers := make(chan bool)   // true to kill go routines
 
 	// start number of threads
 	for w := 1; w <= monkeyConfig.Threads; w++ {
-		go worker(w, quitWorkers, requests, response)
+		go Worker(w, quitWorkers, requests, response)
 	}
 
 	// send requests to q
 	go func() {
 		for req := 1; req <= monkeyConfig.Requests; req++ {
-			wrk := WorkerConfig{Request: req, monkeyConfig: monkeyConfig}
+			wrk := WorkerData{Request: req, MonkeyConfig: monkeyConfig}
 			requests <- wrk
 		}
 	}()
@@ -199,9 +216,13 @@ func NewReport(monkeyConfig *MonkeyConfig) ([]byte, error) {
 
 	numberOfErrors := 0
 	for res := 1; res <= monkeyConfig.Requests; res++ {
-		wrkConf := <-response
-		report.Workers = append(report.Workers, wrkConf)
-		if wrkConf.Status == 0 {
+		data := <-response
+		if !monkeyConfig.WithResponse {
+			data.ResponseBody = ""
+		}
+		report.Data = append(report.Data, data)
+
+		if data.Status == 0 {
 			numberOfErrors++
 		}
 
@@ -214,14 +235,10 @@ func NewReport(monkeyConfig *MonkeyConfig) ([]byte, error) {
 	// send either way to kill the go routine
 	drainRequests <- true
 
-	report.calcStats()
+	report.CalcStats()
 	report.Duration = time.Since(start).Seconds()
 
-	b, err := json.Marshal(report)
-	if err != nil {
-		return nil, err
-	}
-	// report = Report{}
+	// outputSaver(report)
 
 	go func() {
 		for i := 1; i <= monkeyConfig.Threads; i++ {
@@ -234,13 +251,14 @@ func NewReport(monkeyConfig *MonkeyConfig) ([]byte, error) {
 		close(drainRequests)
 		// close transporter
 		// @todo : on hit and run (repetitive request ) some transporter routines still
-		tr.CloseIdleConnections()
+		Tr.CloseIdleConnections()
 	}()
 
-	fileWriter := newFile(fmt.Sprintf("%s.json", report.UUID))
+	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
 	defer fileWriter.Close()
+	jsonReport := report.JSON()
+	fmt.Fprintf(fileWriter, string(jsonReport))
 
-	fmt.Fprintf(fileWriter, string(b))
+	return report, nil
 
-	return b, nil
 }
