@@ -21,8 +21,9 @@ RUN               make linux
 RUN               pwd && ls -al
 
 FROM              quay.io/prometheus/busybox:latest
+RUN               mkdir -p /web/ui/build
 COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/ustress-linux-amd64 /ustress
-COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui /web/ui
+COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui/build /web/ui/build
 COPY              configuration.yaml .
 RUN               pwd && ls -al
 EXPOSE            8080 
