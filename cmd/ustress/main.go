@@ -9,28 +9,30 @@ import (
 	"git.metrosystems.net/reliability-engineering/ustress/log"
 	"git.metrosystems.net/reliability-engineering/ustress/ustress"
 	"git.metrosystems.net/reliability-engineering/ustress/web"
+	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
-	verbose = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
-	app     = kingpin.New("ustress", "A URL stress application.")
+	appVersion = "0.0.1"
+	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
+	app        = kingpin.New("ustress", "A URL stress application.")
 
 	stress       = app.Command("stress", "stress a URL")
 	url          = stress.Flag("url", "URL to probe.").Required().String()
 	requests     = stress.Flag("requests", "Number of request to be sent.").Required().Int()
-	workers      = stress.Flag("workers", "Number of concurent workers").Required().Int()
-	resolve      = stress.Flag("resolve", "Force resolve of HOST:PORT to ADDRESS").String()
-	insecure     = stress.Flag("insecure", "Ignore invalid certificate").Bool()
-	method       = stress.Flag("method", "HTTP Method to use").String()
+	workers      = stress.Flag("workers", "Number of concurent workers").Default("1").Int()
 	payload      = stress.Flag("payload", "Payload to send").String()
 	headers      = stress.Flag("headers", "Headers to set for request").String()
+	method       = stress.Flag("method", "HTTP Method to use").Default("GET").String()
 	withResponse = stress.Flag("with-response", "To return response or not").Default("false").Bool()
+	insecure     = stress.Flag("insecure", "Ignore invalid certificate").Bool()
+	resolve      = stress.Flag("resolve", "Force resolve of HOST:PORT to ADDRESS").String()
 
 	webServer     = app.Command("web", "start the http server")
 	startWeb      = webServer.Flag("start", "Start http server.").Required().Bool()
 	listenAddress = webServer.Flag("listen-address", "Address on which to start the web server").Default(":8080").String()
-	configPath    = webServer.Flag("config", "Path to configuration").Required().String()
+	configPath    = webServer.Flag("config", "Path to configuration").String()
 )
 
 func loadHeaders(headers string) map[string]string {
@@ -47,7 +49,7 @@ func loadHeaders(headers string) map[string]string {
 }
 
 func main() {
-	app.Version("0.0.1")
+	app.Version(appVersion)
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	// Manual stress
 	case stress.FullCommand():
@@ -64,9 +66,17 @@ func main() {
 		fmt.Println(string(jsonReport))
 	// start the web server
 	case webServer.FullCommand():
+		var a *core.App
 		if *startWeb {
-			a := web.NewAppFromYAML(*configPath)
+
+			cpath := *configPath
+			if cpath != "" {
+				a = web.NewAppFromYAML(*configPath)
+			} else {
+				a = web.NewAppFromYAML("./configuration.yaml")
+			}
 			mux := web.MuxHandlers(a)
+			defer a.Session.Close()
 			log.LogWithFields.Infof("Starting proxy server on: %v", *listenAddress)
 			if err := http.ListenAndServe(*listenAddress, mux); err != nil {
 				log.LogWithFields.Fatalf("ListenAndServe: %v", err.Error())
