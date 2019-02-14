@@ -35,7 +35,7 @@ class Stress extends Component {
   }
 
   defaultconfig = {
-      url: "http://localhost:8080/api/v1/test",
+      url: `http://${window.location.host}/api/v1/test`,
       method: "GET",
       headers: {},
       threads: 4,
@@ -45,7 +45,7 @@ class Stress extends Component {
 
   state = {
     config: {
-      url: "http://localhost:8080/api/v1/test",
+      url: `http://${window.location.host}:8080/api/v1/test`,
       method: "GET",
       headers: {},
       threads: 4,
