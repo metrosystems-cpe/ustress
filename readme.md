@@ -256,14 +256,16 @@ http://localhost:8080/restmonkey/api/v1/probe?url=http://restmonkey.com/restmonk
 
 - [x] slack notification
 - [ ] swagger docu
-- [ ] rebuild ui in node
+- [x] rebuild ui in node
 - [x] abort a test if user send bad url (if firs n% of request represents 100% error rate, abort) - 30%
 - [ ] you know when you write bad code when you cannot define go tests ( #me )
 - [ ] define test in a .yaml file
- - [ ] ability to run test in a defined period of a day / year
- - [ ] ability to re-run tests automatically  
-- [ ] ability to make auth tests | needs advanced http client config  
-- [ ] save reports in a database, cache with TTL
+- [ ] ability to run test in a defined period of a day / year
+- [ ] ability to re-run tests automatically  
+- [x] ability to make auth tests | needs advanced http client config  
+- [x] save reports in a database, cache with TTL
+- [ ] ability run tests over a time period with a specified request frequency 
+
 
 
 ## Pprof

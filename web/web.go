@@ -33,6 +33,9 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 	// redirect to ui
 	mux.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
 
+		writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		writer.Header().Set("Pargma", "no-cache")
+		writer.Header().Set("Expires", "0")
 		// The redirect is cached by the browser, thus most of the endpoints endup with unwanted 301
 		http.Redirect(writer, req, "/ustress", http.StatusMovedPermanently)
 	})
@@ -44,7 +47,7 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 	})
 
 	// Serving static files
-	mux.Handle("/static/", http.StripPrefix("", http.FileServer(http.Dir("web/ui/build"))))
+	mux.Handle("/ustress/static/", http.StripPrefix("/ustress/", http.FileServer(http.Dir("web/ui/build"))))
 
 	// Index file
 	mux.Handle("/ustress/ui/public/", http.StripPrefix("/ustress/ui/public/", http.FileServer(http.Dir("web/ui/build/"))))
