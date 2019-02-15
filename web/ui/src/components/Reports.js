@@ -4,6 +4,7 @@ import { Typography, Card, CardContent, Select, InputLabel, FormControl,  ListIt
 import Axios from 'axios';
 import PrettyPrint from './utils/prettyprint';
 import CustomTable from './utils/table';
+import {CurrentDomain} from '../index';
 
 class Reports extends Component {
 
@@ -27,7 +28,7 @@ class Reports extends Component {
   getReport = report_id => {
     if (!report_id) { return }
     Axios
-      .get(`http://${window.location.host}:8080/ustress/api/v1/file_reports?file=` + report_id)
+      .get(`${CurrentDomain}/ustress/api/v1/file_reports?file=` + report_id)
       .then(response => {
         console.log(response.data)
         this.setState({...this.state, report: response.data})
@@ -46,7 +47,7 @@ class Reports extends Component {
 
   getReports = () => {
     Axios
-    .get(`http://${window.location.host}/ustress/api/v1/reports`)
+    .get(`${CurrentDomain}/ustress/api/v1/reports`)
     .then(response => {
       console.log(response)
       this.setState({...this.state, data: this.parseReports(response.data.entries)})
@@ -55,7 +56,7 @@ class Reports extends Component {
       console.log(error)
       console.log(error.response)
       if (error.response && error.response.status === 400) {
-        Axios.get(`http://${window.location.host}/ustress/api/v1/file_reports`).then(res => {
+        Axios.get(`${CurrentDomain}/ustress/api/v1/file_reports`).then(res => {
           this.setState({data: res.data.length > 0 ? res.data : []})
         })
 
