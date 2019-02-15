@@ -17,6 +17,8 @@ import {WS} from '../index';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 
+import {CurrentDomain} from '../index';
+
 
 
 
@@ -35,7 +37,7 @@ class Stress extends Component {
   }
 
   defaultconfig = {
-      url: `http://${window.location.host}/api/v1/test`,
+      url: `${CurrentDomain}/api/v1/test`,
       method: "GET",
       headers: {},
       threads: 4,
@@ -45,7 +47,7 @@ class Stress extends Component {
 
   state = {
     config: {
-      url: `http://${window.location.host}:8080/api/v1/test`,
+      url: `${CurrentDomain}:8080/api/v1/test`,
       method: "GET",
       headers: {},
       threads: 4,

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Card, CardContent, Typography } from '@material-ui/core';
 
+
 class Home extends Component {
 
     render() {
