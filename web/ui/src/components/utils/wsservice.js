@@ -1,5 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { withSnackbar } from 'notistack';
 
 
 class WebSocketService {
@@ -9,17 +10,31 @@ class WebSocketService {
     if (url !== undefined) {
       this.init(url)
     }
+    this.enqueueSnackbar = (m, o) => {}
+  }
+
+  reconnect(delay) {
+    setTimeout(() => {
+      console.warn("Reconnecting ws")
+      this.create(this.url)
+    }, delay)
   }
 
   create(url) {
+
     this.ws = new WebSocket(url)
+
     let observable = Observable.create((obs => {
       this.ws.onmessage = obs.next.bind(obs);
       this.ws.onerror = obs.error.bind(obs);
+      this.ws.onopen = () => {
+        this.enqueueSnackbar("Websocket connected", {variant:"success"})
+        this.status = true
+      }
       this.ws.onclose = () => {
         this.status = false
-        console.log("Websocket disconnected")
-
+        this.enqueueSnackbar("Websocket disconnected", {variant: "error"})
+        this.reconnect(2500)
       }
     }))
 
@@ -28,9 +43,11 @@ class WebSocketService {
         if (this.ws.readyState === WebSocket.OPEN) {
           this.timestamp = new Date();
           this.ws.send(JSON.stringify(data))
+          this.enqueueSnackbar("Request successfuly sent", {variant: "success"})
         } else {
-          this.init(this.url)
           this.status = false
+          this.reconnect(2500)
+          this.enqueueSnackbar("Websocket Disconnected", {variant: "error"})
           console.warn("Websocket Disconnected");
         }
       }
@@ -40,7 +57,6 @@ class WebSocketService {
   }
 
   init(url) {
-    this.status = true
     this.feed = this.create(url).pipe(map(res => {
       // For some reason the output after parsing JSON is still string
       // TODO dig deeper

@@ -16,8 +16,13 @@ import { Button, Divider } from '@material-ui/core';
 import {WS} from '../index';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
+import ReportsDashboard from './utils/reportsDashboard';
+import { Line, Scatter } from 'react-chartjs-2';
+import * as zoom from 'chartjs-plugin-zoom'
+import * as downsample from 'chartjs-plugin-responsive-downsample';
 
 import {CurrentDomain} from '../index';
+import { withSnackbar } from 'notistack';
 
 
 
@@ -34,6 +39,7 @@ class Stress extends Component {
   constructor(props) {
     super(props);
     this.headerContainer = React.createRef();
+    WS.enqueueSnackbar = this.props.enqueueSnackbar
   }
 
   defaultconfig = {
@@ -47,7 +53,7 @@ class Stress extends Component {
 
   state = {
     config: {
-      url: `${CurrentDomain}:8080/api/v1/test`,
+      url: `${CurrentDomain}/api/v1/test`,
       method: "GET",
       headers: {},
       threads: 4,
@@ -63,8 +69,12 @@ class Stress extends Component {
   };
   
   wsMessages = WS.feed.subscribe( message => {
+    let sortedData = message.data.sort((a, b) => {
+      return a - b
+    })
+
     this.setState({
-      data: message.data,
+      data: sortedData,
       stats: message.stats,
       details: {uuid: message.uuid, timestamp: message.timestamp, duration: message.durationTotal}
     })
@@ -97,7 +107,9 @@ class Stress extends Component {
   clearConfig = () => {
     this.setState({
       config: this.defaultconfig,
-      headerElems: {}
+      headerElems: {},
+      data: []
+      
     })
 
 
@@ -269,42 +281,17 @@ class Stress extends Component {
             </CardActions>
 
           </Card>
-          <Card elevation={1} className="paper">
-            <Typography variant="title">
-              Report details
-            </Typography>
-            <Divider />
 
-            <PrettyPrint options={this.state.details}>
-            </PrettyPrint>
-          </Card>
-
-          <Card elevation={1} className="paper">
-              
-              <Typography variant="title">
-                uStress Config
-              </Typography>
-              <Divider />
-              <PrettyPrint options={this.state.config}>
-              </PrettyPrint>
-              
-          </Card>
-
-          <Card elevation={1} className="paper">
-              
-              <Typography variant="title">
-                Statistics
-              </Typography>
-              <Divider className="divider" />
-              <PrettyPrint options={this.state.stats}>
-              </PrettyPrint>
-              
-          </Card>
-          <CustomTable data={this.state.data}></CustomTable>
         </form>
+        <ReportsDashboard 
+          details={this.state.details} 
+          data={this.state.data} 
+          stats={this.state.stats}
+          config={this.state.config}
+          ></ReportsDashboard>
       </div>
     )
   }
 }
 
-export default Stress;
+export default withSnackbar(Stress);
