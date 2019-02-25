@@ -20,12 +20,9 @@ import Typography from '@material-ui/core/Typography';
 import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-
-
-
-
-
+import { SnackbarProvider, withSnackbar } from 'notistack';
 import CssBaseline from '@material-ui/core/CssBaseline';
+import {WS} from './index'
 
 import './App.scss';
 
@@ -146,6 +143,8 @@ class App extends Component {
     const { classes, theme } = this.props;
     const { open } = this.state;
     return (
+      <SnackbarProvider maxSnack="3" anchorOrigin={{vertical:"bottom", horizontal:"right"}}>
+
       <Router path="/" basename="/ustress/ui/public">
         <div className={classes.root}>
           <CssBaseline />
@@ -219,6 +218,7 @@ class App extends Component {
           </main>
         </div>
       </Router>
+      </SnackbarProvider>
     );
   }
 }

@@ -5,6 +5,8 @@ import Axios from 'axios';
 import PrettyPrint from './utils/prettyprint';
 import CustomTable from './utils/table';
 import {CurrentDomain} from '../index';
+import { withSnackbar } from 'notistack';
+import ReportsDashboard from './utils/reportsDashboard';
 
 class Reports extends Component {
 
@@ -30,7 +32,8 @@ class Reports extends Component {
     Axios
       .get(`${CurrentDomain}/ustress/api/v1/file_reports?file=` + report_id)
       .then(response => {
-        console.log(response.data)
+        
+        this.props.enqueueSnackbar(`Fetched report ${report_id}`, {variant:"success"})
         this.setState({...this.state, report: response.data})
       })
       .catch(error => {
@@ -45,19 +48,26 @@ class Reports extends Component {
     })
   }
 
+  /*
+  @TODO!!!
+  Error messages and success messages should not be hardcoded, 
+  those should come directly from backend 
+  */
   getReports = () => {
     Axios
     .get(`${CurrentDomain}/ustress/api/v1/reports`)
     .then(response => {
-      console.log(response)
+      this.props.enqueueSnackbar("Reports fetched", {variant:"success"})
       this.setState({...this.state, data: this.parseReports(response.data.entries)})
     })
     .catch(error => {
-      console.log(error)
-      console.log(error.response)
+      this.props.enqueueSnackbar("Retrieving reports from cassandra failed", {variant:"error"})
       if (error.response && error.response.status === 400) {
         Axios.get(`${CurrentDomain}/ustress/api/v1/file_reports`).then(res => {
+          this.props.enqueueSnackbar("Retrieved reports from local storage", {variant:"success"})
           this.setState({data: res.data.length > 0 ? res.data : []})
+        }).catch( err => {
+          this.props.enqueueSnackbar(err.error, {variant: "error"})
         })
 
       }
@@ -83,7 +93,7 @@ class Reports extends Component {
         <Card>
           <CardContent>
             <FormControl className="text-field">
-              <InputLabel>Select a report</InputLabel>
+              <InputLabel>{this.state.report.data.length != 0 ? this.state.report.uuid : "Select a report"}</InputLabel>
               <Select className="text-field" value={this.state.selectedReport} onChange={this.handleChange}>
                 {this.state.data.map( r => {
                   return (
@@ -99,23 +109,14 @@ class Reports extends Component {
 
           </CardContent>
         </Card>
-        <Card className="paper">
-          <CardContent>
-            <Typography variant="title"> Config </Typography>
-            <PrettyPrint options={this.state.report.config}></PrettyPrint>
-          </CardContent>
-        </Card>
-        <Card className="paper">
-          <CardContent>
-            <Typography variant="title"> Stats </Typography>
-            <PrettyPrint options={this.state.report.stats}></PrettyPrint>
 
-          </CardContent>
-        </Card>
-        <CustomTable data={this.state.report.data}></CustomTable>
-
+        <ReportsDashboard 
+          data={this.state.report.data} 
+          config={this.state.report.config}
+          stats={this.state.report.stats}
+          ></ReportsDashboard>
       </div>
     )
   }
 }
-export default Reports
+export default withSnackbar(Reports)

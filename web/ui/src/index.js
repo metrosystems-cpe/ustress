@@ -5,10 +5,13 @@ import App from './App';
 import WebSocketService from './components/utils/wsservice';
 
 
-export const CurrentDomain = `${window.location.protocol}//${window.location.host}`;
+// Put to false before pushing to master
+const dev = false;
+
+export const CurrentDomain = !dev ? `${window.location.protocol}//${window.location.host}`: 'http://localhost:8080';
 
 var wsUrl = CurrentDomain.indexOf("localhost") != -1 ? 
-    `ws://${window.location.host}/ustress/api/v1/ws` : 
+    `ws://localhost:8080/ustress/api/v1/ws` : 
     `wss://${window.location.host}/ustress/api/v1/ws`;
 
 export const WS = new WebSocketService(wsUrl);
