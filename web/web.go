@@ -66,11 +66,11 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 	mux.HandleFunc("/.well-known/metrics", core.PrometheusHandlerView)
 
 	// Register pprof handlers
-	mux.HandleFunc("/debug/pprof/", pprof.Index)
-	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/ustress/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/ustress/debug/pprof/cmdline/", pprof.Cmdline)
+	mux.HandleFunc("/ustress/debug/pprof/profile/", pprof.Profile)
+	mux.HandleFunc("/ustress/debug/pprof/symbol/", pprof.Symbol)
+	mux.HandleFunc("/ustress/debug/pprof/trace/", pprof.Trace)
 
 	return mux
 
