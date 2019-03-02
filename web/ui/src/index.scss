@@ -13,3 +13,14 @@ span.spacer {
 .right {text-align:right;}
 .header-containers, .headers-container div { display: flex; }
 .half-width { width: 50%; }
+.cstm-flex {
+  display: flex;
+  flex-direction: row;
+
+}
+.cstm-flex-item {
+  flex-grow: 1;
+  padding: .8rem;
+  margin: .6rem;
+}
+.center {text-align:center;}

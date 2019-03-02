@@ -93,7 +93,7 @@ const drawerWidth = 240;
 class App extends Component {
 
   state = {
-    open: false,
+    open: true,
     title: "Home",
   };
 
@@ -188,7 +188,6 @@ class App extends Component {
               tabIndex={0}
               role="button"
             >
-            
               <List onClick={this.updatePageTitle}>
                 {this.routesList.map(elem => {
                   return (
