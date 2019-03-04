@@ -15,6 +15,7 @@ RUN               mkdir -p ${PROJECT_DIR}
 WORKDIR           ${PROJECT_DIR}
 COPY              . .
 COPY              --from=ui-build ${PROJECT_DIR}/web/ui ${PROJECT_DIR}/web/ui/.
+RUN               go get git.metrosystems.net/reliability-engineering/reliability-incubator/reutils
 RUN               go get github.com/golang/dep/cmd/dep
 RUN               dep ensure -vendor-only
 RUN               make linux
