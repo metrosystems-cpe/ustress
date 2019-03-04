@@ -12,6 +12,8 @@ import (
 
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	"github.com/gocql/gocql"
+	reCassandra "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils/cassandra"
+	"time"
 )
 
 var session *gocql.Session
@@ -25,24 +27,26 @@ const AppConfigPath = "git.metrosystems.net/reliability-engineering/ustress/conf
 type APIendpoint func(a *App, w http.ResponseWriter, r *http.Request) (interface{}, error)
 
 // Configuration will store app config
-type Configuration struct {
-	Cluster  []string // List of IPs
-	Keyspace string
-	Username string
-	Password string
-}
+//type Configuration struct {
+//	Cluster  []string // List of IPs
+//	Keyspace string
+//	Username string
+//	Password string
+//  Port int
+//}
 
 // App will store app state, and other metadata alongside with utility functions
 type App struct {
 	Version       string
-	Configuration *Configuration
+	Configuration *reCassandra.Config
 	Session       *gocql.Session
 }
 
 // InitSession initializes a cassandra session and attaches to the app struct
 func (a *App) InitSession() error {
 	var err error
-	cluster := gocql.NewCluster(a.Configuration.Cluster...)
+	cluster := gocql.NewCluster(a.Configuration.Hosts...)
+	cluster.Port = a.Configuration.Port
 	auth := gocql.PasswordAuthenticator{
 		Username: a.Configuration.Username,
 		Password: a.Configuration.Password,
@@ -52,8 +56,10 @@ func (a *App) InitSession() error {
 	cluster.Keyspace = a.Configuration.Keyspace
 
 	//Defaults
-	cluster.Consistency = gocql.One //Write on at least one node
+	cluster.Consistency = gocql.Quorum //Write on at least one node
 	cluster.Authenticator = auth
+	d, _ := time.ParseDuration("1m")
+	cluster.Timeout = d
 
 	a.Session, err = cluster.CreateSession()
 	return err
@@ -111,8 +117,17 @@ func NewAppFromYAML(configpath string) *App {
 	return &a
 }
 
+func NewAppFromEnv() *App {
+	var a App
+	var err error
+	a.Configuration, err = reCassandra.ParseConnectionString()
+	log.LogError(err)
+	a.Init()
+	return &a
+}
+
 // NewApp inits the app
-func NewApp(version string, c *Configuration) *App {
+func NewApp(version string, c *reCassandra.Config) *App {
 	a := &App{Version: version, Configuration: c}
 	a.Init()
 	return a

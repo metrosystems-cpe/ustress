@@ -68,13 +68,8 @@ func main() {
 	case webServer.FullCommand():
 		var a *core.App
 		if *startWeb {
+			a = web.NewAppFromEnv()
 
-			cpath := *configPath
-			if cpath != "" {
-				a = web.NewAppFromYAML(*configPath)
-			} else {
-				a = web.NewAppFromYAML("./configuration.yaml")
-			}
 			mux := web.MuxHandlers(a)
 			defer a.Session.Close()
 			log.LogWithFields.Infof("Starting proxy server on: %v", *listenAddress)
