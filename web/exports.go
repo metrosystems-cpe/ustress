@@ -7,4 +7,5 @@ import (
 var (
 	NewAppFromYAML = core.NewAppFromYAML
 	NewApp         = core.NewApp
+	NewAppFromEnv  = core.NewAppFromEnv
 )
