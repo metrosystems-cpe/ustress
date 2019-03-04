@@ -42,4 +42,8 @@ required = ["gopkg.in/yaml.v2"]
   branch = "master"
   name = "github.com/gocql/gocql"
 
+[[constraint]]
+  branch = "master"
+  name = "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils"
+
 
