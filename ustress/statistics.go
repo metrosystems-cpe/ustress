@@ -27,6 +27,7 @@ type Report struct {
 	Stats     Stats         `json:"stats"`
 	Duration  float64       `json:"durationTotal"`
 	Data      []WorkerData  `json:"data"`
+	Completed bool          `json:"completed"`
 }
 
 func (report *Report) CalcStats() *Report {

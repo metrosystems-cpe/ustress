@@ -84,14 +84,12 @@ func URLStress(a *core.App, wr http.ResponseWriter, req *http.Request) (interfac
 	}
 
 	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, method, "", nil, false)
-	report, err := ustress.NewReport(restMK)
+	report, err := ustress.NewReport(restMK, nil, 0)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
 	}
 
-	jsonReport := report.JSON()
-	log.LogWithFields.Debug(string(jsonReport))
-	stressTestReport := core.StressTest{ID: report.UUID, Report: &report}
+	stressTestReport := core.StressTest{ID: report.UUID, Report: report}
 	err = stressTestReport.Save(a.Session)
 	log.LogError(err)
 	return report, err

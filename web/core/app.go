@@ -10,10 +10,11 @@ import (
 
 	"io/ioutil"
 
+	"time"
+
+	reCassandra "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils/cassandra"
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	"github.com/gocql/gocql"
-	reCassandra "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils/cassandra"
-	"time"
 )
 
 var session *gocql.Session
@@ -26,14 +27,7 @@ const AppConfigPath = "git.metrosystems.net/reliability-engineering/ustress/conf
 // APIendpoint ...
 type APIendpoint func(a *App, w http.ResponseWriter, r *http.Request) (interface{}, error)
 
-// Configuration will store app config
-//type Configuration struct {
-//	Cluster  []string // List of IPs
-//	Keyspace string
-//	Username string
-//	Password string
-//  Port int
-//}
+type JSONResponse map[string]interface{}
 
 // App will store app state, and other metadata alongside with utility functions
 type App struct {
@@ -117,13 +111,16 @@ func NewAppFromYAML(configpath string) *App {
 	return &a
 }
 
-func NewAppFromEnv() *App {
+// NewAppFromEnv Gets configuration from env
+func NewAppFromEnv() (*App, error) {
 	var a App
 	var err error
 	a.Configuration, err = reCassandra.ParseConnectionString()
-	log.LogError(err)
-	a.Init()
-	return &a
+	if err == nil {
+		a.Init()
+		return &a, nil
+	}
+	return nil, err
 }
 
 // NewApp inits the app
@@ -151,6 +148,15 @@ func Middleware(a *App, endpoint APIendpoint) http.HandlerFunc {
 	}
 }
 
+// LocalCassandraConfig Used for development
+func LocalCassandraConfig() *reCassandra.Config {
+	return &reCassandra.Config{
+		Hosts:    []string{"127.0.0.1"},
+		Keyspace: "ustress",
+		Port:     9042,
+	}
+}
+
 func (a *App) load(configpath string) {
 	yamlFile, err := ioutil.ReadFile(configpath)
 	log.LogError(err)
@@ -158,11 +164,11 @@ func (a *App) load(configpath string) {
 	log.LogError(err)
 }
 
-func writeResponse(w http.ResponseWriter, response map[string]interface{}) {
+func writeResponse(w http.ResponseWriter, response JSONResponse) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if response["error"] != "" {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(400)
 		return
 	}
 	jsonBytes, err := json.Marshal(response)

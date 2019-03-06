@@ -28,8 +28,10 @@ const (
 	HTTPfolder = "./data/" // Would be nice to generate absolute path via code || gopath
 )
 
-type OutputSaver func(Report)
+// OutputSaver is a callback with report data
+type OutputSaver func(*Report)
 
+// Headers map
 type Headers map[string]string
 
 // MonkeyConfig structure
@@ -80,7 +82,8 @@ func setHeaders(r *http.Request, h Headers) {
 	}
 }
 
-// function for the concurent goroutines
+// Worker func
+// is function for the concurent goroutines
 // request channel it is used to receive work
 // response channel is used to send back the work done
 // id is the routine id, named thread for easy uderstanding
@@ -175,10 +178,10 @@ func NewConfig(
 }
 
 // NewReport probes an endpoint and generates a new report
-func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
+func NewReport(monkeyConfig *MonkeyConfig, saveFunc OutputSaver, tickerSave int) (*Report, error) {
 
 	start := time.Now()
-	report := Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: monkeyConfig}
+	report := &Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: monkeyConfig, Completed: false}
 
 	requests := make(chan WorkerData, monkeyConfig.Requests)
 	response := make(chan WorkerData, monkeyConfig.Requests)
@@ -194,9 +197,10 @@ func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
 	// send requests to q
 	go func() {
 		for req := 1; req <= monkeyConfig.Requests; req++ {
-			wrk := WorkerData{Request: req, MonkeyConfig: monkeyConfig}
-			requests <- wrk
+			requests <- WorkerData{Request: req, MonkeyConfig: monkeyConfig}
 		}
+		//TODO
+		// runtime.Goexit()
 	}()
 
 	go func() {
@@ -209,7 +213,13 @@ func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
 				runtime.Goexit()
 				return
 			default:
-				// dono
+				// Every [tickerSave] seconds calculates stats to stream realtime report
+				if tickerSave != 0 {
+					time.Sleep(time.Duration(tickerSave) * time.Millisecond)
+					report.CalcStats()
+					report.Duration = time.Since(start).Seconds()
+					saveFunc(report)
+				}
 			}
 		}
 	}()
@@ -237,9 +247,9 @@ func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
 
 	report.CalcStats()
 	report.Duration = time.Since(start).Seconds()
+	report.Completed = true
 
 	// outputSaver(report)
-
 	go func() {
 		for i := 1; i <= monkeyConfig.Threads; i++ {
 			quitWorkers <- true
@@ -254,10 +264,16 @@ func NewReport(monkeyConfig *MonkeyConfig) (Report, error) {
 		Tr.CloseIdleConnections()
 	}()
 
-	fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
-	defer fileWriter.Close()
-	jsonReport := report.JSON()
-	fmt.Fprintf(fileWriter, string(jsonReport))
+	// Backoff
+	if saveFunc == nil {
+		jsonReport := report.JSON()
+		fileWriter := NewFile(fmt.Sprintf("%s.json", report.UUID))
+		defer fileWriter.Close()
+		fmt.Fprintf(fileWriter, string(jsonReport))
+		return report, nil
+	}
+
+	saveFunc(report)
 
 	return report, nil
 
