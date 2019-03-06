@@ -9,7 +9,6 @@ import (
 	"git.metrosystems.net/reliability-engineering/ustress/log"
 	"git.metrosystems.net/reliability-engineering/ustress/ustress"
 	"git.metrosystems.net/reliability-engineering/ustress/web"
-	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -58,7 +57,7 @@ func main() {
 			*resolve, *insecure, *method,
 			*payload, loadHeaders(*headers), *withResponse)
 		fmt.Printf("%#v", restMK)
-		report, err := ustress.NewReport(restMK)
+		report, err := ustress.NewReport(restMK, nil, 0)
 		if err != nil {
 			log.LogWithFields.Error(err.Error())
 		}
@@ -66,9 +65,12 @@ func main() {
 		fmt.Println(string(jsonReport))
 	// start the web server
 	case webServer.FullCommand():
-		var a *core.App
 		if *startWeb {
-			a = web.NewAppFromEnv()
+			a, err := web.NewAppFromEnv()
+			log.LogError(err)
+			if a == nil {
+				a = web.NewApp(appVersion, web.LocalCassandraConfig())
+			}
 
 			mux := web.MuxHandlers(a)
 			defer a.Session.Close()

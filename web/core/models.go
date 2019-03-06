@@ -17,17 +17,13 @@ const StressTestTableName = "stress_test"
 // ScheduledTest is an incoming feature
 const ScheduledTestTableName = "scheduled_test"
 
+// Tables metadata that will be used to generate tables
 var Tables = map[string]map[string]string{
 	StressTestTableName: map[string]string{
 		"id":     "UUID PRIMARY KEY",
 		"report": "text",
 		"meta":   "WITH default_time_to_live = " + "604800", // one week
 	},
-	// ScheduledTestTableName: map[string]string{
-	// 	"id":            "UUID PRIMARY KEY",
-	// 	"repeat_period": "INTEGER",
-	// 	"report":        "TEXT",
-	// },
 }
 
 func Select(tableName string, pk interface{}, val interface{}) string {
@@ -51,12 +47,6 @@ func Insert(tableName string, keys []string, vals ...interface{}) string {
 
 	return q
 }
-
-// type ScheduledTest struct {
-// 	RepeatPeriod int // 0 no repeat
-// 	ScheduleTime time.Time
-// 	Config       ustress.MonkeyConfig
-// }
 
 type StressTest struct {
 	ID     uuid.UUID       `gocql:"id"`
@@ -84,12 +74,15 @@ func (test *StressTest) Save(sess *gocql.Session) error {
 		fmt.Sprintf("'%s'", string(test.Report.JSON())),
 	)
 	err := sess.Query(q).Exec()
-	log.LogWithFields.Infof("Inserting row into table %s", StressTestTableName)
+	log.LogWithFields.Infof("[INSERT] row into table %s", StressTestTableName)
 	return err
 }
 
 func (test *StressTest) All(sess *gocql.Session) ([]map[string]interface{}, error) {
 	q := fmt.Sprintf("SELECT * FROM %s", StressTestTableName)
 	return sess.Query(q).Iter().SliceMap()
+}
 
+func NewStressTest(report *ustress.Report) *StressTest {
+	return &StressTest{ID: report.UUID, Report: report}
 }

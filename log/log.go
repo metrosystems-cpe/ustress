@@ -44,3 +44,7 @@ func LogError(e error) {
 		LogWithFields.Error(e)
 	}
 }
+
+func LogDebug(msg string) {
+	LogWithFields.Debug(msg)
+}

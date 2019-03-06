@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	NewAppFromYAML = core.NewAppFromYAML
-	NewApp         = core.NewApp
-	NewAppFromEnv  = core.NewAppFromEnv
+	NewAppFromYAML       = core.NewAppFromYAML
+	NewApp               = core.NewApp
+	NewAppFromEnv        = core.NewAppFromEnv
+	LocalCassandraConfig = core.LocalCassandraConfig
 )
