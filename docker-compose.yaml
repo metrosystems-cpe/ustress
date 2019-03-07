@@ -1,0 +1,72 @@
+version: '3'
+networks:
+  app-net: 
+    driver: bridge
+volumes:
+  cassandra-data:  
+services:
+# TODO Inject cassandra creds inside web container
+  web:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+      args:
+        PROJECT_DIR: /go/src/git.metrosystems.net/reliability-engineering/ustress
+    working_dir: /go/src/git.metrosystems.net/reliability-engineering/ustress
+    command: sh -c "go run cmd/ustress/main.go web --start"
+    environment:
+      GOPATH: /go
+    volumes:
+      - .:/go/src/git.metrosystems.net/reliability-engineering/ustress
+    depends_on:
+      - cassandra
+    environment:
+      CASSANDRA_CREDS: "some creds"
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost/.well-known/ready"]
+      interval: 2s
+      retries: 2000
+    networks:
+      - app-net
+    links:
+      - cassandra
+    ports:
+      - '8080:8080'
+    
+
+  frontend:
+    build:
+      context: .
+      dockerfile: dev.frontend.Dockerfile
+      args:
+        PROJECT_DIR: /go/src/git.metrosystems.net/reliability-engineering/ustress 
+    working_dir: /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui
+    command: sh -c "npm start"
+    volumes:
+      - ./web/ui/src:/go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui/src
+    networks: 
+      - app-net 
+    links:
+      - web
+    depends_on:
+      - web
+    ports:
+      - '3000:3000'
+
+  cassandra:
+    image: 'bitnami/cassandra:latest'
+    volumes:
+      - cassandra-data
+    networks:
+      - app-net
+    environment:
+      - CASSANDRA_PASSWORD_SEEDER=yes
+    
+    ports:
+      - "7199:7199" # JMX
+      - "7000:7000" # cluster communication
+      - "7001:7001" # cluster communication (SSL)
+      - "9042:9042" # native protocol clients
+      - "9160:9160" # thrift clients
+    
+
