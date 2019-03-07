@@ -1,10 +1,10 @@
-FROM              golang:1.11.0 AS server-build
+FROM              golang:1.11.0 
 
-WORKDIR           /go/src/git.metrosystems.net/reliability-engineering/ustress
+ARG               PROJECT_DIR=/go/src/git.metrosystems.net/reliability-engineering/ustress/
+WORKDIR           ${PROJECT_DIR} 
 COPY              . .
 RUN               go get github.com/golang/dep/cmd/dep
-RUN               dep ensure -vendor-only
+RUN               go get git.metrosystems.net/reliability-engineering/reliability-incubator/reutils
+
+RUN               dep ensure --vendor-only 
 RUN               ls -al
-EXPOSE 8080
-ENTRYPOINT        [ "go", "run", "cmd/ustress/main.go", \
-    "web", "--start", "--config ./configuration.yaml"]
