@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	appVersion = "0.0.1"
+	appVersion = "0.1.0"
 	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	app        = kingpin.New("ustress", "A URL stress application.")
 

@@ -44,11 +44,6 @@ func errorHandler(wr http.ResponseWriter, req *http.Request, err string) {
 func URLStress(a *core.App, wr http.ResponseWriter, req *http.Request) (interface{}, error) {
 	// exampleCall := "?url=http://localhost:9090&requests=20&workers=4"
 	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
-	// TODO
-	// Isolate validations
-	// Extract method, payload, headers
-	// More dynamicity
-	wr.Header().Set("Content-Type", "application/json")
 
 	urlPath := req.URL.Query()
 
