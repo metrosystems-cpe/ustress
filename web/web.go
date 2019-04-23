@@ -5,6 +5,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"path"
+	"strings"
 
 	"golang.org/x/net/websocket"
 
@@ -25,12 +26,9 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 // MuxHandlers ...
 func MuxHandlers(a *core.App) *http.ServeMux {
 
-	// var addr = flag.String("addr", ":8080", "The addr of the application.")
-	// flag.Parse()
-
 	mux := http.NewServeMux()
 
-	// redirect to ui
+	// redirect to app
 	mux.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
 
 		writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -39,18 +37,29 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 		// The redirect is cached by the browser, thus most of the endpoints endup with unwanted 301
 		http.Redirect(writer, req, "/ustress", http.StatusMovedPermanently)
 	})
+	//
 	mux.HandleFunc("/ustress", func(writer http.ResponseWriter, req *http.Request) {
 		writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		writer.Header().Set("Pargma", "no-cache")
 		writer.Header().Set("Expires", "0")
-		http.Redirect(writer, req, "/ustress/ui/public/", http.StatusMovedPermanently)
+		http.Redirect(writer, req, "/ustress/ui/public", http.StatusMovedPermanently)
 	})
 
-	// Serving static files
-	mux.Handle("/ustress/static/", http.StripPrefix("/ustress/", http.FileServer(http.Dir("web/ui/build"))))
-
 	// Index file
-	mux.Handle("/ustress/ui/public/", http.StripPrefix("/ustress/ui/public/", http.FileServer(http.Dir("web/ui/build/"))))
+	// Serving static files
+	// mux.Handle("/ustress/ui/public/", http.StripPrefix("/ustress/ui/public", http.FileServer(http.Dir("web/ui/build/"))))
+	mux.HandleFunc("/ustress/ui/public/", func(w http.ResponseWriter, req *http.Request) {
+		req.URL.Path = strings.Replace(req.URL.Path, "/ustress/ui/public", "", 1)
+		switch {
+		case strings.Contains(req.URL.Path, "/static"):
+			http.ServeFile(w, req, path.Join("web/ui/build", req.URL.Path))
+		case strings.Contains(req.URL.Path, "favicon"):
+			http.ServeFile(w, req, path.Join("web/ui/build", req.URL.Path))
+		default:
+			http.ServeFile(w, req, path.Join("web/ui/build", "index.html"))
+
+		}
+	})
 
 	mux.Handle("/ustress/data/", http.StripPrefix("/ustress/data/", http.FileServer(http.Dir("data"))))
 
@@ -73,9 +82,4 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 	mux.HandleFunc("/ustress/debug/pprof/trace/", pprof.Trace)
 
 	return mux
-
-	// log.LogWithFields.Infof("Starting proxy server on: %v", *addr)
-	// if err := http.ListenAndServe(*addr, mux); err != nil {
-	// 	log.LogWithFields.Fatalf("ListenAndServe: %v", err.Error())
-	// }
 }
