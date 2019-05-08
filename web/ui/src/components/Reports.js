@@ -76,7 +76,6 @@ class Reports extends Component {
   }
 
   handleChange = event =>  {
-    console.log(event.target.value)
     if (event.target.value.uuid.indexOf(".json") != -1) {
       this.getReport(event.target.value.uuid)
       return

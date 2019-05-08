@@ -42,10 +42,11 @@ func TestURLStress(t *testing.T) {
 	resbody := rr.Result()
 	result, err := ioutil.ReadAll(resbody.Body)
 	assert.Nil(t, err)
+	fmt.Println(result)
 
 	// Validate
 	assert.Equal(t, 200, resbody.StatusCode)
-	assert.Equal(t, "application/json", resbody.Header.Get("Content-Type"))
+	assert.Equal(t, "application/json", resbody.Header.Get("content-type"))
 
 	var jr core.JSONResponse
 	err = json.Unmarshal(result, &jr)

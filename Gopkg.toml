@@ -24,15 +24,18 @@ required = ["gopkg.in/yaml.v2"]
 
 [[constraint]]
   name = "github.com/Sirupsen/logrus"
-  version = "1.0.5"
+#  branch = "master"
+  version = "1.4.1"
 
 [[constraint]]
   name = "github.com/google/uuid"
-  version = "0.2.0"
+#  branch = "master"
+  version = "1.1.1"
 
 [[constraint]]
   name = "github.com/montanaflynn/stats"
-  version = "0.3.0"
+#  branch = "master"
+  version = "0.5.0"
 
 [[constraint]]
   branch = "master"

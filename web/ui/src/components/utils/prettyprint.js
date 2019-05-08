@@ -21,7 +21,9 @@ class PrettyPrint extends Component {
               <span className="spacer"></span>
               <ListItemText className="right" primary={
                 typeof options[k] === 'object' ? JSON.stringify(options[k]) : options[k]
-                }></ListItemText>
+                }>
+
+              </ListItemText>
             </ListItem>
           )
         })}
