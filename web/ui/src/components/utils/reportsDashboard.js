@@ -4,18 +4,10 @@ import { Card, Typography, Divider } from '@material-ui/core';
 import PrettyPrint from './prettyprint';
 
 import { Line, Scatter, Bar } from 'react-chartjs-2';
+
+import { Doughnut } from 'react-chartjs-2';
 import CustomTable from './table';
-
-const random_rgba = () => {
-  var o = Math.round, r = Math.random, s = 255;
-  return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + '0.5' + ')';
-}
-
-const color_pool = []
-
-for (let index = 0; index < 100; index++) {
-  color_pool.push(random_rgba())
-}
+import {color_pool} from '../../index';
 
 class ReportsDashboard extends Component {
   constructor(props) {
@@ -83,7 +75,7 @@ class ReportsDashboard extends Component {
          /**
           * Cull data to displayed range of x scale. Default: true
           */
-        cullData: true
+        cullData: false
       },
       pan: {
         enabled: true,
@@ -147,11 +139,17 @@ class ReportsDashboard extends Component {
 
   getBarChartData = (stats) => {
 
-    let keys = Object.keys(stats)
-    let data = []
+    let keys = Object.keys(stats);
+    let ep = keys.indexOf("error_percentage");
+    let cc = keys.indexOf("codes_count");
+    if (cc != -1) { keys.pop(cc)}
+    if (ep != -1) { keys.pop(ep)};
+
+    let data = [];
     keys.map( k => {
       data.push(stats[k])
     })
+
     return {
       labels:keys, 
       datasets:[{
@@ -162,7 +160,7 @@ class ReportsDashboard extends Component {
           "rgb(59, 199, 246)",
           "rgb(6, 164, 217)",
           "rgb(0, 149, 198)",
-          "rgb(255, 112, 112)",
+          // "rgb(255, 112, 112)",
         ]
 
       }]
@@ -172,6 +170,23 @@ class ReportsDashboard extends Component {
 
   getBarChartOptions = () => {
     return {legend:{display:false}}
+  }
+
+  getDoughnutData = (data) => {
+    if (!data.codes_count) {return}
+    let labels = Object.keys(data.codes_count);
+    return {
+      labels: labels,
+      datasets:[{
+        data:Object.values(data.codes_count),
+        backgroundColor: [
+          "rgb(171, 228, 247)",
+          "rgb(130, 217, 247)",
+          "rgb(59, 199, 246)",
+        ]
+
+      }]
+    }
   }
 
   render() {
@@ -203,50 +218,7 @@ class ReportsDashboard extends Component {
 
     return (
       <div>
-        <div elevation={1} className="paper">
-            
-          <Typography variant="title">
-            Summary 
-          </Typography>
-          <Divider />
-          <div class="cstm-flex">
-            <Card className="cstm-flex-item">
-              <Typography variant="caption">
-                Avg. Response time
-              </Typography>
-              <Typography variant="title" className="center">
-                { stats.median }
-              </Typography>
-            </Card>
-            <Card className="cstm-flex-item">
-              <Typography variant="caption">
-                Requests
-              </Typography>
-              <Typography variant="title" className="center">
-                {data.length}
-              </Typography>
-            </Card>
-            <Card className="cstm-flex-item">
-              <Typography variant="caption">
-                Error Rate
-              </Typography>
-              <Typography variant="tilte" className="center">
-                { stats.error_percentage != undefined ? stats.error_percentage+"%" : ""}
-              </Typography>
-            </Card>
-          </div>
-        </div>
         {getDetails(details)}
-        <Card elevation={1} className="paper">
-            
-            <Typography variant="title">
-              uStress Config
-            </Typography>
-            <Divider />
-            <PrettyPrint options={config}>
-            </PrettyPrint>
-            
-        </Card>
 
         <Card elevation={1} className="paper">
             
@@ -258,6 +230,37 @@ class ReportsDashboard extends Component {
             </PrettyPrint>
             
         </Card>
+
+
+        <div className="cstm-flex">
+
+          <Card elevation={1} className="paper text-field-s">
+
+            <Typography variant="title">
+              Code Count
+            </Typography>
+            <Typography variant="caption">
+                Number of requests with status code
+            </Typography>
+            <Divider className="divider" />
+            <Doughnut data={this.getDoughnutData(stats)}></Doughnut>
+
+          </Card>
+          <Card elevation={1} className="paper text-field-s">
+
+            <Typography variant="title">
+              Hist 99th Chart
+            </Typography>
+            <Typography variant="caption">
+              Displays the latency statistics
+            </Typography>
+            <Divider className="divider" />
+            <Bar data={this.getBarChartData(stats)} options={this.getBarChartOptions(data)}>
+            </Bar>
+
+          </Card>
+
+        </div>
         <Card elevation={1} className="paper">
             
             <Typography variant="title">
@@ -267,22 +270,22 @@ class ReportsDashboard extends Component {
               Displays all the requests made and their durations
             </Typography>
             <Divider className="divider" />
-            <Line data={this.getChartData(data)} options={this.getChartOptions(data)} redraw></Line >
-            
-        </Card>
-        <Card elevation={1} className="paper">
-            
-            <Typography variant="title">
-              Hist 99th Chart
-            </Typography>
-            <Typography variant="caption">
-              Displays the latency statistics
-            </Typography>
-            <Divider className="divider" />
-            <Bar data={this.getBarChartData(stats)} options={this.getBarChartOptions(data)}></Bar >
+            <Line data={this.getChartData(data)} options={this.getChartOptions(data)}>
+            </Line>
             
         </Card>
         <CustomTable data={this.state.data}></CustomTable>
+
+        <Card elevation={1} className="paper">
+
+          <Typography variant="title">
+            uStress Config
+          </Typography>
+          <Divider />
+          <PrettyPrint options={config}>
+          </PrettyPrint>
+
+        </Card>
 
       </div>
     )

@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewHTTPClientDefault(t *testing.T) {
-	monkeyConfig := MonkeyConfig{
+	monkeyConfig := StressConfig{
 		URL:      "http://localhost:8080/test",
 		Requests: 16,
 		Threads:  4,
@@ -38,7 +38,7 @@ func TestNewHTTPClientDefault(t *testing.T) {
 }
 
 func TestNewHTTPClientDefaultInsecure(t *testing.T) {
-	monkeyConfig := MonkeyConfig{
+	monkeyConfig := StressConfig{
 		URL:      "http://localhost:8080/test",
 		Requests: 16,
 		Threads:  4,
@@ -70,7 +70,7 @@ func TestNewHTTPClientDefaultInsecure(t *testing.T) {
 }
 
 func TestNewHTTPClientDefaultResolve(t *testing.T) {
-	monkeyConfig := MonkeyConfig{
+	monkeyConfig := StressConfig{
 		URL:      "http://localhost:8080/test",
 		Requests: 16,
 		Threads:  4,

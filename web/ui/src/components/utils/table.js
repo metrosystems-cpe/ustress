@@ -71,7 +71,7 @@ class EnhancedTableHead extends React.Component {
           {rows.map(
             row => (
               <TableCell
-                key={row.id}
+                key={row.id + "table"}
                 sortDirection={orderBy === row.id ? order : false}
               >
                 <Tooltip
@@ -255,7 +255,7 @@ class EnhancedTable extends React.Component {
     const { data } = this.props;
     
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
-    
+
 
     return (
       <Paper className={classes.root}>
@@ -282,12 +282,12 @@ class EnhancedTable extends React.Component {
                       role="checkbox"
                       aria-checked={isSelected}
                       tabIndex={-1}
-                      key={n}
+                      key={data.indexOf(n)}
                       selected={isSelected}
                     >
                       {Object.keys(n).map( c => {
                         return (
-                          <TableCell key={c}>
+                          <TableCell key={c +n[c]}>
                             {n[c]}
                           </TableCell>
                         )
