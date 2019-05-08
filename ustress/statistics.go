@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	"git.metrosystems.net/reliability-engineering/ustress/log"
 	"github.com/google/uuid"
 	"github.com/montanaflynn/stats"
 )
@@ -17,13 +17,14 @@ type Stats struct {
 	PercentileC     float64 `json:"95_percentile"`
 	PercentileD     float64 `json:"99_percentile"`
 	ErrorPercentage float64 `json:"error_percentage"`
+	CodesCount 		map[int]int `json:"codes_count"`
 }
 
 // Report structure
 type Report struct {
 	UUID      uuid.UUID     `json:"uuid"`
 	TimeStamp time.Time     `json:"timestamp"`
-	Config    *MonkeyConfig `json:"config"`
+	Config    *StressConfig `json:"config"`
 	Stats     Stats         `json:"stats"`
 	Duration  float64       `json:"durationTotal"`
 	Data      []WorkerData  `json:"data"`

@@ -2,18 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
+	"git.metrosystems.net/reliability-engineering/ustress/ustress"
+
 	"github.com/google/uuid"
 
-	log "git.metrosystems.net/reliability-engineering/ustress/log"
-	ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"git.metrosystems.net/reliability-engineering/ustress/log"
+	// ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
 	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 )
-
-var RequiredParamsMissing = errors.New("Some of the required parameters are missing")
 
 var (
 	uParam         string
@@ -46,39 +45,24 @@ func URLStress(a *core.App, wr http.ResponseWriter, req *http.Request) (interfac
 	// http://localhost:9090/probe?resolve=10.29.30.8:443&url=https://idam-pp.metrosystems.net/.well-known/openid-configuration&requests=10&workers=4
 
 	urlPath := req.URL.Query()
-
-	if uParam = urlPath.Get("url"); uParam == "" {
-		errorHandler(wr, req, "missing url parameter")
-		return nil, RequiredParamsMissing
-	}
-
-	insecure, _ := strconv.ParseBool(urlPath.Get("insecure"))
-
+	uParam = urlPath.Get("url")
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
-	if rParam <= 0 {
-		errorHandler(wr, req, "missing requests parameter")
-		return nil, RequiredParamsMissing
-	}
-
 	wParam, _ = strconv.Atoi(urlPath.Get("workers"))
-	if wParam <= 0 {
-		errorHandler(wr, req, "missing workers parameter")
-		return nil, RequiredParamsMissing
+
+	restMK, err := ustress.NewStressConfig(
+		ustress.NewOption("URL", uParam),
+		ustress.NewOption("Requests", rParam),
+		ustress.NewOption("Threads", wParam),
+		// ustress.NewOption("Resolve", resolve),
+		//insecure,
+		//method,
+		//"",
+		//nil,
+		//false
+	)
+	if err != nil {
+		return nil, err
 	}
-
-	resolve := urlPath.Get("resolve") // @todo validate ip:port
-
-	method := urlPath.Get("method") // @todo validate ip:port
-
-	// limit the number of requests and number of threads.
-	if rParam > 1000 {
-		rParam = 1000
-	}
-	if wParam > 20 {
-		wParam = 20
-	}
-
-	restMK := ustress.NewConfig(uParam, rParam, wParam, resolve, insecure, method, "", nil, false)
 	report, err := ustress.NewReport(restMK, nil, 0)
 	if err != nil {
 		log.LogWithFields.Error(err.Error())
