@@ -61,6 +61,9 @@ class WebSocketService {
       // For some reason the output after parsing JSON is still string
       // TODO dig deeper
       let data = JSON.parse(res.data);
+      if (!data) {
+        return {}
+      }
       return typeof data === 'string' ? JSON.parse(data) : data;
     }))
   }

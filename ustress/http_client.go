@@ -14,7 +14,7 @@ var (
 	Tr         = &http.Transport{}
 )
 
-func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
+func (cfg *StressConfig) newHTTPClient() *http.Client {
 	timeout := time.Duration(2 * time.Second)
 
 	dialer := &net.Dialer{
@@ -23,21 +23,21 @@ func (mkcfg *MonkeyConfig) newHTTPClient() *http.Client {
 		DualStack: true,
 	}
 	Tr = &http.Transport{
-		MaxIdleConns:        mkcfg.Threads,
-		MaxIdleConnsPerHost: mkcfg.Threads,
+		MaxIdleConns:        cfg.Threads,
+		MaxIdleConnsPerHost: cfg.Threads,
 		Dial:                (dialer).Dial,
 		TLSHandshakeTimeout: timeout,
 	}
 
 	// resolve ip
-	if mkcfg.Resolve != "" {
+	if cfg.Resolve != "" {
 		Tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer.DialContext(ctx, network, mkcfg.Resolve)
+			return dialer.DialContext(ctx, network, cfg.Resolve)
 		}
 	}
 
 	// insecure request
-	if mkcfg.Insecure {
+	if cfg.Insecure {
 		Tr.TLSClientConfig = &tls.Config{
 			InsecureSkipVerify: true,
 		}
