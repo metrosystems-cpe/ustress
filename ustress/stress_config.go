@@ -3,9 +3,8 @@ package ustress
 import (
 	// "bytes"
 	"fmt"
-	// "io"
-	// "io/ioutil"
 	"net/http"
+
 	"net/url"
 	"reflect"
 	"time"
@@ -33,7 +32,7 @@ var (
 )
 
 // OutputSaver is a callback with report data
-type OutputSaver func(*Report, chan bool)
+type OutputSaver func(*Report) error
 
 // Headers map
 type Headers map[string]string
@@ -63,11 +62,12 @@ type StressConfig struct {
 	Frequency int `json:"frequency"`// Miliseconds
 
 	// client instantiate a new http client
-	client *http.Client // `json:"-"`
 
 	// If each worker should capture response
 	WithResponse bool      `json:"withResponse"`
-	StopCh       chan bool `json:"-"`
+
+	client *http.Client // `json:"-"`
+	stopCh       chan bool `json:"-"`
 }
 
 // ValidateConfig ...
@@ -130,6 +130,18 @@ func NewStressConfig(opts ...Option) (*StressConfig, error) {
 		cfg.Requests = int(hits)+ 1
 	}
 	cfg.client = cfg.newHTTPClient()
+	cfg.stopCh = make(chan bool)
 
 	return cfg, cfg.ValidateConfig()
 }
+
+func (s *StressConfig) StopAttack() {
+	select {
+	case <- s.stopCh:
+		return
+	default:
+		close(s.stopCh)
+	}
+
+}
+
