@@ -50,8 +50,9 @@ func loadHeaders(headers string) map[string]string {
 	return headersMap
 }
 
-func streamOutput(r *ustress.Report,q  chan bool) {
+func streamOutput(r *ustress.Report) error {
 	fmt.Print(string(r.JSON()))
+	return nil
 }
 
 func main() {
