@@ -6,11 +6,13 @@ import (
 )
 
 
-var cfg *StressConfig
-var err error
-
 
 func TestOptions(t *testing.T) {
+	var (
+		cfg *StressConfig
+		err error
+	)
+
 	cfg, err = NewStressConfig(NewOption("Threads", "2"))
 
 	assert.NotNil(t, err)
@@ -31,7 +33,7 @@ func TestStressConfig(t *testing.T) {
 
 	headers := map[string]string{"content-type":"application/json"}
 
-	cfg, err = NewStressConfig(
+	cfg, err := NewStressConfig(
 		NewOption("URL", "http://localhost"),
 		NewOption("Requests", 10),
 		NewOption("Threads", 2),

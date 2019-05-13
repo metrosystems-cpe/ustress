@@ -1,6 +1,7 @@
 package ustress
 
 import (
+	"fmt"
 	"os"
 
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
@@ -16,6 +17,15 @@ func NewFile(filename string) *os.File {
 	}
 	return f
 }
+
+// SaveFileReport it will save the report as json on local storage
+func SaveFileReport(r *Report) {
+	jsonReport := r.JSON()
+	fileWriter := NewFile(fmt.Sprintf("%s.json", r.UUID))
+	defer fileWriter.Close()
+	fmt.Fprintf(fileWriter, string(jsonReport))
+}
+
 
 // CreateDirIfNotExist the function name says it all
 func createDirIfNotExist(dir string) {
