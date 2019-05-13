@@ -49,6 +49,7 @@ func URLStress(a *core.App, wr http.ResponseWriter, req *http.Request) (interfac
 	rParam, _ = strconv.Atoi(urlPath.Get("requests"))
 	wParam, _ = strconv.Atoi(urlPath.Get("workers"))
 
+
 	restMK, err := ustress.NewStressConfig(
 		ustress.NewOption("URL", uParam),
 		ustress.NewOption("Requests", rParam),
