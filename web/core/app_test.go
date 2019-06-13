@@ -5,12 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	reCassandra "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils/cassandra"
 	"github.com/stretchr/testify/assert"
 )
 
-func newConfig(ip string) *reCassandra.Config {
-	return &reCassandra.Config{
+func newConfig(ip string) *Config {
+	return &Config{
 		Hosts:    []string{ip},
 		Port:     9042,
 		Keyspace: "ustress",

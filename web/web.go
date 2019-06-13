@@ -3,7 +3,6 @@ package web
 import (
 	"net/http"
 	"net/http/pprof"
-	"os"
 	"path"
 	"strings"
 
@@ -12,16 +11,6 @@ import (
 	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
 	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 )
-
-func serveIndex(w http.ResponseWriter, r *http.Request) {
-	requestedAsset := path.Join(r.URL.Path, "index.html")
-	_, err := os.Stat(requestedAsset)
-	if err != nil {
-		http.ServeFile(w, r, requestedAsset)
-		return
-	}
-
-}
 
 // MuxHandlers ...
 func MuxHandlers(a *core.App) *http.ServeMux {
@@ -37,7 +26,6 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 		// The redirect is cached by the browser, thus most of the endpoints endup with unwanted 301
 		http.Redirect(writer, req, "/ustress", http.StatusMovedPermanently)
 	})
-	//
 	mux.HandleFunc("/ustress", func(writer http.ResponseWriter, req *http.Request) {
 		writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		writer.Header().Set("Pargma", "no-cache")
@@ -45,9 +33,7 @@ func MuxHandlers(a *core.App) *http.ServeMux {
 		http.Redirect(writer, req, "/ustress/ui/public", http.StatusMovedPermanently)
 	})
 
-	// Index file
 	// Serving static files
-	// mux.Handle("/ustress/ui/public/", http.StripPrefix("/ustress/ui/public", http.FileServer(http.Dir("web/ui/build/"))))
 	mux.HandleFunc("/ustress/ui/public/", func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = strings.Replace(req.URL.Path, "/ustress/ui/public", "", 1)
 		switch {

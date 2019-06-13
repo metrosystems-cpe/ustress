@@ -11,8 +11,12 @@ import (
 	"io/ioutil"
 
 	"time"
+	"os"
+	"net/url"
+	"strconv"
+	"strings"
 
-	reCassandra "git.metrosystems.net/reliability-engineering/reliability-incubator/reutils/cassandra"
+
 	log "git.metrosystems.net/reliability-engineering/ustress/log"
 	"github.com/gocql/gocql"
 )
@@ -21,18 +25,21 @@ var session *gocql.Session
 
 var NoDBConn = errors.New("No database connection")
 
-// AppConfigPath default path
-const AppConfigPath = "git.metrosystems.net/reliability-engineering/ustress/configuration.yaml"
-
 // APIendpoint ...
 type APIendpoint func(a *App, w http.ResponseWriter, r *http.Request) (interface{}, error)
 
 type JSONResponse map[string]interface{}
 
+type Config struct {
+	Hosts []string
+	Port int
+	Keyspace, Username, Password string
+}
+
 // App will store app state, and other metadata alongside with utility functions
 type App struct {
 	Version       string
-	Configuration *reCassandra.Config
+	Configuration *Config
 	Session       *gocql.Session
 }
 
@@ -70,8 +77,6 @@ func (a *App) Init() {
 	}
 	log.LogWithFields.Info("Creating cassandra schema")
 	a.CreateSchema()
-	// defer a.Session.Close()
-
 }
 
 // CreateSchema generates the required tables
@@ -111,11 +116,51 @@ func NewAppFromYAML(configpath string) *App {
 	return &a
 }
 
+
+func NewConfig(cassEnv string) (*Config, error) {
+	var err error
+
+	if cassEnv == "" {
+		return &Config{}, errors.New("No env name provided")
+
+	}
+	connectionString := os.Getenv(cassEnv)
+	if connectionString == "" {
+		return nil, errors.New("no connection string")
+	}
+
+	var Conf Config
+	uri, _ := url.Parse(connectionString)
+	if uri.Path != "" {
+		Conf.Keyspace = strings.Replace(uri.Path, "/", "", -1)
+	}
+	Conf.Hosts = append(Conf.Hosts, uri.Hostname())
+
+	Conf.Port, err = strconv.Atoi(uri.Port())
+	if err != nil {
+		log.LogDebug("Couldn't extract port using default 9042")
+		Conf.Port = 9042
+	}
+
+	if uri.User != nil {
+		Conf.Username = uri.User.Username()
+		password, set := uri.User.Password()
+		if set == true {
+			Conf.Password = password
+		}
+	}
+
+	urlArgs, _ := url.ParseQuery(uri.RawQuery)
+	Conf.Hosts = append(Conf.Hosts,urlArgs["node"]...)
+
+	return &Conf, nil
+}
+
 // NewAppFromEnv Gets configuration from env
-func NewAppFromEnv() (*App, error) {
+func NewAppFromEnv(cassandraEnv string) (*App, error) {
 	var a App
 	var err error
-	a.Configuration, err = reCassandra.ParseConnectionString()
+	a.Configuration, err = NewConfig(cassandraEnv)
 	if err == nil {
 		a.Init()
 		return &a, nil
@@ -124,7 +169,7 @@ func NewAppFromEnv() (*App, error) {
 }
 
 // NewApp inits the app
-func NewApp(version string, c *reCassandra.Config) *App {
+func NewApp(version string, c *Config) *App {
 	a := &App{Version: version, Configuration: c}
 	a.Init()
 	return a
@@ -149,8 +194,8 @@ func Middleware(a *App, endpoint APIendpoint) http.HandlerFunc {
 }
 
 // LocalCassandraConfig Used for development
-func LocalCassandraConfig() *reCassandra.Config {
-	return &reCassandra.Config{
+func LocalCassandraConfig() *Config {
+	return &Config{
 		Hosts:    []string{"127.0.0.1"},
 		Keyspace: "ustress",
 		Port:     9042,
