@@ -9,6 +9,7 @@ import (
 
 	"git.metrosystems.net/reliability-engineering/ustress/log"
 	"git.metrosystems.net/reliability-engineering/ustress/web"
+	"git.metrosystems.net/reliability-engineering/ustress/web/core"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -19,8 +20,8 @@ var (
 
 	stress = app.Command("stress", "stress a URL")
 	webServer = app.Command("web", "start the http server")
-	startWeb      = webServer.Flag("start", "Start http server.").Required().Bool()
 	listenAddress = webServer.Flag("listen-address", "Address on which to start the web server").Default(":8080").String()
+	cassandraEnv = webServer.Flag("cassandra-envvar", "Env var where cassandra creds are found").Default("").String()
 	url	= stress.Flag("url", "URL to probe.").Required().String()
 	requests = stress.Flag("requests", "Number of request to be sent.").Int()
 	workers = stress.Flag("workers", "Number of concurent workers").Default("1").Int()
@@ -96,19 +97,18 @@ func main() {
 
 	// start the web server
 	case webServer.FullCommand():
-		if *startWeb {
-			a, err := web.NewAppFromEnv()
-			log.LogError(err)
-			if a == nil {
-				a = web.NewApp(appVersion, web.LocalCassandraConfig())
-			}
+		a, err := core.NewAppFromEnv(*cassandraEnv)
 
-			mux := web.MuxHandlers(a)
-			defer a.Session.Close()
-			log.LogWithFields.Infof("Starting proxy server on: %v", *listenAddress)
-			if err := http.ListenAndServe(*listenAddress, mux); err != nil {
-				log.LogWithFields.Fatalf("ListenAndServe: %v", err.Error())
-			}
+		log.LogError(err)
+		if a == nil {
+			a = core.NewApp(appVersion, core.LocalCassandraConfig())
+		}
+
+		mux := web.MuxHandlers(a)
+		defer a.Session.Close()
+		log.LogWithFields.Infof("Starting proxy server on: %v", *listenAddress)
+		if err := http.ListenAndServe(*listenAddress, mux); err != nil {
+			log.LogWithFields.Fatalf("ListenAndServe: %v", err.Error())
 		}
 	}
 }
