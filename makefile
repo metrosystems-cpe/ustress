@@ -19,6 +19,10 @@ LDFLAGS = -ldflags "-w -s -X main.VERSION=${VERSION} -X main.COMMIT=${COMMIT} -X
 # Build the project
 all: linux docker
 
+
+build_docker:
+	docker build . -f ./build/build.Dockerfile -t ustress
+
 clean:
 	go clean -n
 	rm -f ${CURRENT_DIR}/${BINARY}-windows-${GOARCH}.exe

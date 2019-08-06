@@ -15,9 +15,7 @@ RUN               mkdir -p ${PROJECT_DIR}
 WORKDIR           ${PROJECT_DIR}
 COPY              . .
 COPY              --from=ui-build ${PROJECT_DIR}/web/ui ${PROJECT_DIR}/web/ui/.
-RUN               go get git.metrosystems.net/reliability-engineering/reliability-incubator/reutils
-RUN               go get github.com/golang/dep/cmd/dep
-RUN               dep ensure -vendor-only
+RUN               go get ./...
 RUN               make linux
 RUN               pwd && ls -al
 
@@ -25,7 +23,6 @@ FROM              quay.io/prometheus/busybox:latest
 RUN               mkdir -p /web/ui/build
 COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/ustress-linux-amd64 /ustress
 COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui/build /web/ui/build
-COPY              configuration.yaml .
 RUN               pwd && ls -al
 EXPOSE            8080 
-ENTRYPOINT        [ "/ustress", "web", "--start" ]
+ENTRYPOINT        [ "/ustress", "web"]
