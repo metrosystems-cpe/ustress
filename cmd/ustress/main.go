@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"git.metrosystems.net/reliability-engineering/ustress/ustress"
 	"net/http"
 	"os"
 	"strings"
+
+	"git.metrosystems.net/reliability-engineering/ustress/ustress"
 
 	"git.metrosystems.net/reliability-engineering/ustress/log"
 	"git.metrosystems.net/reliability-engineering/ustress/web"
@@ -18,25 +19,23 @@ var (
 	verbose    = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	app        = kingpin.New("ustress", "A URL stress application.")
 
-	stress = app.Command("stress", "stress a URL")
-	webServer = app.Command("web", "start the http server")
+	stress        = app.Command("stress", "stress a URL")
+	webServer     = app.Command("web", "start the http server")
 	listenAddress = webServer.Flag("listen-address", "Address on which to start the web server").Default(":8080").String()
-	cassandraEnv = webServer.Flag("cassandra-envvar", "Env var where cassandra creds are found").Default("").String()
-	url	= stress.Flag("url", "URL to probe.").Required().String()
-	requests = stress.Flag("requests", "Number of request to be sent.").Int()
-	workers = stress.Flag("workers", "Number of concurent workers").Default("1").Int()
-	payload = stress.Flag("payload", "Payload to send").String()
-	headers = stress.Flag("headers", "Headers to set for request").String()
-	method = stress.Flag("method", "HTTP Method to use").Default("GET").String()
-	withResponse = stress.Flag("with-response", "To return response or not").Default("false").Bool()
-	streamOut = stress.Flag("stream-output", "Stream output").Default("false").Bool()
-	insecure = stress.Flag("insecure", "Ignore invalid certificate").Bool()
-	resolve = stress.Flag("resolve", "Force resolve of HOST:PORT to ADDRESS").String()
-	duration = stress.Flag("duration", "Stress duration").Int()
-	frequency = stress.Flag("frequency", "Requests hit frequency").Int()
+	cassandraEnv  = webServer.Flag("cassandra-envvar", "Env var where cassandra creds are found").Default("CASS_CREDS").String()
+	url           = stress.Flag("url", "URL to probe.").Required().String()
+	requests      = stress.Flag("requests", "Number of request to be sent.").Int()
+	workers       = stress.Flag("workers", "Number of concurent workers").Default("1").Int()
+	payload       = stress.Flag("payload", "Payload to send").String()
+	headers       = stress.Flag("headers", "Headers to set for request").String()
+	method        = stress.Flag("method", "HTTP Method to use").Default("GET").String()
+	withResponse  = stress.Flag("with-response", "To return response or not").Default("false").Bool()
+	streamOut     = stress.Flag("stream-output", "Stream output").Default("false").Bool()
+	insecure      = stress.Flag("insecure", "Ignore invalid certificate").Bool()
+	resolve       = stress.Flag("resolve", "Force resolve of HOST:PORT to ADDRESS").String()
+	duration      = stress.Flag("duration", "Stress duration").Int()
+	frequency     = stress.Flag("frequency", "Requests hit frequency").Int()
 )
-
-
 
 func loadHeaders(headers string) map[string]string {
 	headersList := strings.Split(headers, ";")
@@ -61,13 +60,13 @@ func main() {
 
 	var (
 		report *ustress.Report
-		err error
+		err    error
 	)
 
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	// Manual stress
 	case stress.FullCommand():
-		cfg,_ := ustress.NewStressConfig(
+		cfg, _ := ustress.NewStressConfig(
 			ustress.NewOption("Duration", *duration),
 			ustress.NewOption("URL", *url),
 			ustress.NewOption("Frequency", *frequency),
@@ -89,7 +88,7 @@ func main() {
 		}
 
 		if err != nil {
-			
+
 			log.LogWithFields.Error(err.Error())
 		}
 		jsonReport := report.JSON()
