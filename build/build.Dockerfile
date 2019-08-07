@@ -1,6 +1,6 @@
 # Build react app into static files
 FROM node:10-alpine as ui-build 
-ENV               PROJECT_DIR /go/src/git.metrosystems.net/reliability-engineering/ustress/
+ENV               PROJECT_DIR /go/src/github.com/metrosystems-cpe/ustress/
 RUN               mkdir -p ${PROJECT_DIR}/web/ui 
 WORKDIR           ${PROJECT_DIR}/web/ui
 COPY              web/ui .
@@ -10,7 +10,7 @@ RUN               pwd && ls -al
 
 # Building app and injecting static files
 FROM              golang:1.11.0 AS server-build
-ENV               PROJECT_DIR /go/src/git.metrosystems.net/reliability-engineering/ustress/
+ENV               PROJECT_DIR /go/src/github.com/metrosystems-cpe/ustress/
 RUN               mkdir -p ${PROJECT_DIR}
 WORKDIR           ${PROJECT_DIR}
 COPY              . .
@@ -21,8 +21,8 @@ RUN               pwd && ls -al
 
 FROM              quay.io/prometheus/busybox:latest
 RUN               mkdir -p /web/ui/build
-COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/ustress-linux-amd64 /ustress
-COPY              --from=server-build /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui/build /web/ui/build
+COPY              --from=server-build /go/src/github.com/metrosystems-cpe/ustress/ustress-linux-amd64 /ustress
+COPY              --from=server-build /go/src/github.com/metrosystems-cpe/ustress/web/ui/build /web/ui/build
 RUN               pwd && ls -al
 EXPOSE            8080 
 ENTRYPOINT        [ "/ustress", "web"]

@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"git.metrosystems.net/reliability-engineering/ustress/web/core"
+	"github.com/metrosystems-cpe/ustress/web/core"
 )
 
 func getApp() *core.App {

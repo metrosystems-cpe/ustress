@@ -2,10 +2,33 @@
 
 Performs high load / rest tests for an endpoint using one or more concurrent requests ( only GET for now ).
 
+
+## Installation 
+
+To use the UI 
+```console
+git clone https://github.com/metrosystems-cpe/ustress
+cd ./ustress
+make build_docker
+docker run -p "8080:8080" ustress
+```
+
+To use the CLI
+```console
+git clone https://github.com/metrosystems-cpe/ustress
+cd ./ustress
+make linux
+ln ustress-linux-amd64 /usr/local/bin/ustress
+```
+
+For Development
+```console
+docker-compose up
+```
+
 ## Usage
 
 ```console
-
 usage: ustress [<flags>] <command> [<args> ...]
 
 A URL stress application.
@@ -19,31 +42,30 @@ Commands:
     Show help.
 
 
-  stress --url=URL --requests=REQUESTS --workers=WORKERS [<flags>]
+  stress --url=URL [<flags>]
     stress a URL
 
-    --url=URL            URL to probe.
-    --requests=REQUESTS  Number of request to be sent.
-    --workers=WORKERS    Number of concurent workers
-    --resolve=RESOLVE    Force resolve of HOST:PORT to ADDRESS
-    --insecure           Ignore invalid certificate
-    --method=METHOD      HTTP Method to use
-    --payload=PAYLOAD    Payload to send
-    --headers=HEADERS    Headers to set for request
-    --with-response      To return response or not
+    --url=URL              URL to probe.
+    --requests=REQUESTS    Number of request to be sent.
+    --workers=1            Number of concurent workers
+    --payload=PAYLOAD      Payload to send
+    --headers=HEADERS      Headers to set for request
+    --method="GET"         HTTP Method to use
+    --with-response        To return response or not
+    --stream-output        Stream output
+    --insecure             Ignore invalid certificate
+    --resolve=RESOLVE      Force resolve of HOST:PORT to ADDRESS
+    --duration=DURATION    Stress duration
+    --frequency=FREQUENCY  Requests hit frequency
 
-  web --[no-]start --config=CONFIG [<flags>]
+  web [<flags>]
     start the http server
 
-    --start                   Start http server.
     --listen-address=":8080"  Address on which to start the web server
-    --config=CONFIG           Path to configuration
+    --cassandra-envvar="CASS_CREDS"
+                              Env var where cassandra creds are found
 ```
 
-
-### UI:
-   - new probe request, calls monkey via a websocket connection
-   - view stored reports
 
 ### Probe handler:
 Warning: if you want to probe a URL with arguments you have to URL encode it
@@ -83,10 +105,8 @@ http://localhost:8080/ustress/api/v1/probe?url=http://ustress.com/ustress/api/v1
 
 ## Improvements - contributions are welcomed
 
-- [x] slack notification
-- [ ] swagger docu
-- [x] rebuild ui in node
-- [x] abort a test if user send bad url (if firs n% of request represents 100% error rate, abort) - 30%
+- [ ] swagger doc
+- [ ] abort a test if user send bad url (if firs n% of request represents 100% error rate, abort) - 30%
 - [ ] you know when you write bad code when you cannot define go tests ( #me )
 - [ ] define test in a .yaml file
 - [ ] ability to run test in a defined period of a day / year

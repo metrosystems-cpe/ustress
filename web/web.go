@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/net/websocket"
 
-	api "git.metrosystems.net/reliability-engineering/ustress/web/api"
-	"git.metrosystems.net/reliability-engineering/ustress/web/core"
+	api "github.com/metrosystems-cpe/ustress/web/api"
+	"github.com/metrosystems-cpe/ustress/web/core"
 )
 
 // MuxHandlers ...

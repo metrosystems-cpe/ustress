@@ -11,13 +11,13 @@ services:
       context: .
       dockerfile: dev.Dockerfile
       args:
-        PROJECT_DIR: /go/src/git.metrosystems.net/reliability-engineering/ustress
-    working_dir: /go/src/git.metrosystems.net/reliability-engineering/ustress
+        PROJECT_DIR: /go/src/github.com/metrosystems-cpe/ustress
+    working_dir: /go/src/github.com/metrosystems-cpe/ustress
     command: sh -c "go run cmd/ustress/main.go web --start"
     environment:
       GOPATH: /go
     volumes:
-      - .:/go/src/git.metrosystems.net/reliability-engineering/ustress
+      - .:/go/src/github.com/metrosystems-cpe/ustress
     depends_on:
       - cassandra
     environment:
@@ -39,11 +39,11 @@ services:
       context: .
       dockerfile: dev.frontend.Dockerfile
       args:
-        PROJECT_DIR: /go/src/git.metrosystems.net/reliability-engineering/ustress 
-    working_dir: /go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui
+        PROJECT_DIR: /go/src/github.com/metrosystems-cpe/ustress 
+    working_dir: /go/src/github.com/metrosystems-cpe/ustress/web/ui
     command: sh -c "npm start"
     volumes:
-      - ./web/ui/src:/go/src/git.metrosystems.net/reliability-engineering/ustress/web/ui/src
+      - ./web/ui/src:/go/src/github.com/metrosystems-cpe/ustress/web/ui/src
     networks: 
       - app-net 
     links:

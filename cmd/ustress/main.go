@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"github.com/metrosystems-cpe/ustress/ustress"
 
-	"git.metrosystems.net/reliability-engineering/ustress/log"
-	"git.metrosystems.net/reliability-engineering/ustress/web"
-	"git.metrosystems.net/reliability-engineering/ustress/web/core"
+	"github.com/metrosystems-cpe/ustress/log"
+	"github.com/metrosystems-cpe/ustress/web"
+	"github.com/metrosystems-cpe/ustress/web/core"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
