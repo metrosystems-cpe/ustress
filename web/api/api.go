@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"github.com/metrosystems-cpe/ustress/ustress"
 
 	"github.com/google/uuid"
 
-	"git.metrosystems.net/reliability-engineering/ustress/log"
-	// ustress "git.metrosystems.net/reliability-engineering/ustress/ustress"
-	"git.metrosystems.net/reliability-engineering/ustress/web/core"
+	"github.com/metrosystems-cpe/ustress/log"
+	// ustress "github.com/metrosystems-cpe/ustress/ustress"
+	"github.com/metrosystems-cpe/ustress/web/core"
 )
 
 var (

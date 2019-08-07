@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"sync"
 
-	"git.metrosystems.net/reliability-engineering/ustress/log"
-	"git.metrosystems.net/reliability-engineering/ustress/ustress"
+	"github.com/metrosystems-cpe/ustress/log"
+	"github.com/metrosystems-cpe/ustress/ustress"
 	"golang.org/x/net/websocket"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	log "github.com/metrosystems-cpe/ustress/log"
 )
 
 // NewFile returns a new file to write data to

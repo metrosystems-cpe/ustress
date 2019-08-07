@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"time"
 
-	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	log "github.com/metrosystems-cpe/ustress/log"
 )
 
 // common ? probably

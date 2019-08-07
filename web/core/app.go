@@ -17,7 +17,7 @@ import (
 	"strings"
 
 
-	log "git.metrosystems.net/reliability-engineering/ustress/log"
+	log "github.com/metrosystems-cpe/ustress/log"
 	"github.com/gocql/gocql"
 )
 

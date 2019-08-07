@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"git.metrosystems.net/reliability-engineering/ustress/log"
+	"github.com/metrosystems-cpe/ustress/log"
 	"github.com/google/uuid"
 	"github.com/montanaflynn/stats"
 )
