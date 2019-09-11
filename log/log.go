@@ -31,7 +31,7 @@ func logrusFieldsConfig() *logrus.Fields {
 	logrusFields := logrus.Fields{
 		"@hostname":       hostName,
 		"@vertical":       "reliability",
-		"service-name":    "rest-monkey",
+		"service-name":    "ustress",
 		"service-version": "x",
 		"type":            "service",
 		"retention":       "technical",

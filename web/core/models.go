@@ -3,13 +3,12 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 
+	"github.com/gocql/gocql"
 	log "github.com/metrosystems-cpe/ustress/log"
 	"github.com/metrosystems-cpe/ustress/ustress"
-	"github.com/gocql/gocql"
 )
 
 const StressTestTableName = "stress_test"
@@ -26,38 +25,15 @@ var Tables = map[string]map[string]string{
 	},
 }
 
-func Select(tableName string, pk interface{}, val interface{}) string {
-	return fmt.Sprintf(
-		"SELECT * FROM %s WHERE %s = %v",
-		tableName,
-		pk,
-		val)
-}
-
-func Insert(tableName string, keys []string, vals ...interface{}) string {
-	q := fmt.Sprintf("INSERT INTO %s ( ", tableName)
-	q += strings.Join(keys, ", ")
-
-	q += " ) VALUES ( "
-	for _, v := range vals {
-		q += fmt.Sprintf("%v, ", v)
-	}
-	q = strings.TrimRight(q, " , ")
-	q += " )"
-
-	return q
-}
-
 type StressTest struct {
 	ID     uuid.UUID       `gocql:"id"`
 	Report *ustress.Report `gocql:"report"`
 }
 
 func (test *StressTest) Get(sess *gocql.Session) error {
-	q := Select(StressTestTableName, "id", gocql.UUID(test.ID))
+	q := fmt.Sprintf("select from %s where id = ?", StressTestTableName)
 	mapString := map[string]interface{}{}
-
-	err := sess.Query(q).MapScan(mapString)
+	err := sess.Query(q, gocql.UUID(test.ID)).MapScan(mapString)
 	if mapString["report"] != nil {
 		v, _ := mapString["report"].(string)
 		json.Unmarshal([]byte(v), test.Report)
@@ -67,13 +43,8 @@ func (test *StressTest) Get(sess *gocql.Session) error {
 }
 
 func (test *StressTest) Save(sess *gocql.Session) error {
-	q := Insert(
-		StressTestTableName,
-		[]string{"id", "report"},
-		gocql.UUID(test.ID),
-		fmt.Sprintf("'%s'", string(test.Report.JSON())),
-	)
-	err := sess.Query(q).Exec()
+	q := fmt.Sprintf("insert into %s (id, report) values (?, ?)", StressTestTableName)
+	err := sess.Query(q, gocql.UUID(test.ID), test.Report.JSON()).Exec()
 	log.LogWithFields.Infof("[INSERT] row into table %s", StressTestTableName)
 	return err
 }
