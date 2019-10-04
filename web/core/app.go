@@ -10,15 +10,14 @@ import (
 
 	"io/ioutil"
 
-	"time"
-	"os"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
-
-	log "github.com/metrosystems-cpe/ustress/log"
 	"github.com/gocql/gocql"
+	log "github.com/metrosystems-cpe/ustress/log"
 )
 
 var session *gocql.Session
@@ -31,8 +30,8 @@ type APIendpoint func(a *App, w http.ResponseWriter, r *http.Request) (interface
 type JSONResponse map[string]interface{}
 
 type Config struct {
-	Hosts []string
-	Port int
+	Hosts                        []string
+	Port                         int
 	Keyspace, Username, Password string
 }
 
@@ -116,7 +115,6 @@ func NewAppFromYAML(configpath string) *App {
 	return &a
 }
 
-
 func NewConfig(cassEnv string) (*Config, error) {
 	var err error
 
@@ -151,7 +149,7 @@ func NewConfig(cassEnv string) (*Config, error) {
 	}
 
 	urlArgs, _ := url.ParseQuery(uri.RawQuery)
-	Conf.Hosts = append(Conf.Hosts,urlArgs["node"]...)
+	Conf.Hosts = append(Conf.Hosts, urlArgs["node"]...)
 
 	return &Conf, nil
 }
@@ -212,11 +210,12 @@ func (a *App) load(configpath string) {
 func writeResponse(w http.ResponseWriter, response JSONResponse) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	jsonBytes, err := json.Marshal(response)
 	if response["error"] != "" {
 		w.WriteHeader(400)
+		w.Write(jsonBytes)
 		return
 	}
-	jsonBytes, err := json.Marshal(response)
 	log.LogError(err)
 	w.Write(jsonBytes)
 }

@@ -1,6 +1,6 @@
 # uStress
 
-Performs high load / rest tests for an endpoint using one or more concurrent requests ( only GET for now ).
+Performs high load / rest tests for an endpoint using one or more concurrent requests.
 
 
 ## Installation 
@@ -68,25 +68,82 @@ Commands:
 
 
 ### Probe handler:
-Warning: if you want to probe a URL with arguments you have to URL encode it
-
-
+```console
+$ curl -s "http://localhost:8080/ustress/api/v1/probe?url=http://localhost:8080/ustress/api/v1/test&requests=4&workers=4" | jq
+{
+  "entries": {
+    "uuid": "81f97756-2eb0-42f8-a928-79158c6b6103",
+    "timestamp": "2019-10-04T14:47:01.005038+01:00",
+    "config": {
+      "url": "http://localhost:8080/ustress/api/v1/test",
+      "method": "",
+      "requests": 4,
+      "threads": 4,
+      "resolve": "",
+      "insecure": false,
+      "payload": "",
+      "headers": null,
+      "duration": 0,
+      "frequency": 0,
+      "withResponse": false
+    },
+    "stats": {
+      "median": 0.256141254,
+      "50_percentile": 0.256108721,
+      "75_percentile": 0.256173787,
+      "95_percentile": 0.256180062,
+      "99_percentile": 0.256180062,
+      "error_percentage": 0,
+      "codes_count": {
+        "200": 4
+      }
+    },
+    "durationTotal": 0.256393686,
+    "data": [
+      {
+        "request": 1,
+        "status": 200,
+        "thread": 1,
+        "duration": 0.256039672,
+        "error": "",
+        "response": ""
+      },
+      {
+        "request": 4,
+        "status": 200,
+        "thread": 4,
+        "duration": 0.256186337,
+        "error": "",
+        "response": ""
+      },
+      {
+        "request": 2,
+        "status": 200,
+        "thread": 2,
+        "duration": 0.256108721,
+        "error": "",
+        "response": ""
+      },
+      {
+        "request": 3,
+        "status": 200,
+        "thread": 3,
+        "duration": 0.256173787,
+        "error": "",
+        "response": ""
+      }
+    ],
+    "completed": true
+  },
+  "error": ""
+}
 ```
-# simple request
-http://localhost:8080/ustress/api/v1/probe?url=http://localhost:8080/ustress/api/v1/test&requests=10&workers=4
 
-# insecure request
-http://localhost:8080/ustress/api/v1/probe?url=http://localhost:8080/ustress/api/v1/test&requests=10&workers=4&insecure=true
+## UI
 
-
-# will resolve ustress.com to 127.0.0.1:8080
-# useful in case you want to probe a single dc
-http://localhost:8080/ustress/api/v1/probe?url=http://ustress.com/ustress/api/v1/test&requests=10&workers=4&insecure=true&resolve=127.0.0.1:8080
-```
+![](https://media.giphy.com/media/H8KIwTlNAu1k13Xr2p/giphy.gif)
 
 ## HTTP Handlers
-
-@todo - swager :)
 
 | Handlers                    | Foo            | Description                  |
 | --------------------------- |:-------------- |:---------------------------- |
@@ -105,17 +162,9 @@ http://localhost:8080/ustress/api/v1/probe?url=http://ustress.com/ustress/api/v1
 
 ## Improvements - contributions are welcomed
 
-- [ ] swagger doc
-- [ ] abort a test if user send bad url (if firs n% of request represents 100% error rate, abort) - 30%
-- [ ] you know when you write bad code when you cannot define go tests ( #me )
 - [ ] define test in a .yaml file
 - [ ] ability to run test in a defined period of a day / year
 - [ ] ability to re-run tests automatically  
-- [x] ability to make auth tests | needs advanced http client config  
-- [x] save reports in a database, cache with TTL
-- [ ] ability run tests over a time period with a specified request frequency 
-
-
 
 ## Pprof
 

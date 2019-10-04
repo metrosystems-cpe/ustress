@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+
 	// "errors"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	// "time"
 )
-
 
 // ChannelTimeout is a last resort method of killing goroutines
 const ChannelTimeout = 5
@@ -65,16 +65,15 @@ func Attack(cfg *StressConfig) chan WorkerData {
 		go Worker(w, requests, response, &group)
 	}
 
-	go func(){
+	go func() {
 		defer group.Wait()
 		group.Add(1)
-		go attack(cfg, requests,  &group)
+		go attack(cfg, requests, &group)
 	}()
 
 	return response
 
 }
-
 
 // NewReport probes an endpoint and generates a new report
 // saveFunc will be called every [tickerSave]ms meant for handling the report in real time
@@ -83,7 +82,7 @@ func NewReport(cfg *StressConfig, saveFunc OutputSaver, tickerSave int) (*Report
 	start := time.Now()
 	report := &Report{TimeStamp: time.Now(), UUID: uuid.New(), Config: cfg, Completed: false}
 	report.Stats.CodesCount = map[int]int{}
-	quit := make(chan bool)
+	quit := make(chan bool, 100)
 	numberOfErrors := 0
 
 	if tickerSave != 0 {
@@ -97,13 +96,13 @@ func NewReport(cfg *StressConfig, saveFunc OutputSaver, tickerSave int) (*Report
 	go func() {
 		defer wg.Done()
 
-		loop:
+	loop:
 		for {
 			select {
 			case data := <-response:
 
 				report.Data = append(report.Data, data)
-				report.Stats.CodesCount[data.Status] += 1
+				report.Stats.CodesCount[data.Status]++
 
 				if data.Status == 0 {
 					numberOfErrors++
@@ -126,8 +125,7 @@ func NewReport(cfg *StressConfig, saveFunc OutputSaver, tickerSave int) (*Report
 				quit <- true
 				break loop
 
-			case <- quit:
-				quit <- true
+			case <-quit:
 				break loop
 			}
 		}
@@ -168,14 +166,14 @@ func streamOutput(
 ) {
 	defer wg.Done()
 	start := time.Now()
-	loop:
+loop:
 	for {
 		select {
 		case <-quit:
 			break loop
 		case <-time.After(time.Duration(interval) * time.Millisecond):
 			r.CalcStats()
-			r.Duration= time.Since(start).Seconds()
+			r.Duration = time.Since(start).Seconds()
 			err := saveFunc(r)
 			if err != nil {
 				break loop
@@ -189,7 +187,7 @@ func attack(cfg *StressConfig, requests chan WorkerData, group *sync.WaitGroup) 
 	defer group.Done()
 
 	start := time.Now()
-	loop:
+loop:
 	for req := 1; req <= cfg.Requests; req++ {
 
 		if cfg.Duration != 0 && time.Since(start).Seconds() >= float64(cfg.Duration) {
@@ -201,9 +199,9 @@ func attack(cfg *StressConfig, requests chan WorkerData, group *sync.WaitGroup) 
 			if cfg.Frequency != 0 {
 				time.Sleep(time.Duration(cfg.Frequency) * time.Millisecond)
 			}
-		case <- time.After(time.Duration(1) * time.Second):
+		case <-time.After(time.Duration(1) * time.Second):
 			break loop
-		case <- cfg.stopCh:
+		case <-cfg.stopCh:
 			break loop
 		}
 	}
@@ -258,5 +256,3 @@ func setHeaders(r *http.Request, h Headers) {
 		r.Header.Set(k, v)
 	}
 }
-
-

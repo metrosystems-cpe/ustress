@@ -1,0 +1,203 @@
+openapi: 3.0.0
+info:
+  title: uStress API
+  description: API for stressing http endpoints
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+servers:
+- url: https://reliability.metrosystems.net/ustress/api/v1
+  description: Reliability Engineering Host
+paths:
+  /probe:
+    get:
+      summary: Probes an endpoint
+      description: |
+        The configuration is set via query params
+      operationId: probe
+      parameters:
+      - name: url
+        in: query
+        description: Endpoint you want to stress
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: requests
+        in: query
+        description: Number of hits
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 1
+          type: integer
+          format: int32
+      - name: threads
+        in: query
+        description: Number of executors
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 1
+          type: integer
+          format: int32
+      - name: method
+        in: query
+        description: Request method
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: insecure
+        in: query
+        description: Hit insecure
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: boolean
+      responses:
+        200:
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppResponse'
+        4XX:
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /reports:
+    get:
+      summary: Retrieves all reports
+      description: |
+        Specifying an id will return a single report, in case is not specified will return all reports
+      operationId: reports
+      parameters:
+      - name: id
+        in: query
+        description: Report id you want to fetch
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Reports
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppResponse'
+        4XX:
+          description: bad input parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+components:
+  schemas:
+    StressConfig:
+      required:
+      - duration
+      - frequency
+      - headers
+      - insecure
+      - payload
+      - requests
+      - resolve
+      - threads
+      - url
+      - withResponse
+      type: object
+      properties:
+        url:
+          type: string
+        requests:
+          type: integer
+        threads:
+          type: integer
+        resolve:
+          type: string
+        insecure:
+          type: boolean
+        payload:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        duration:
+          type: integer
+        frequency:
+          type: integer
+        withResponse:
+          type: boolean
+    DataItem:
+      required:
+      - config
+      - duration
+      - error
+      - request
+      - status
+      - thread
+      type: object
+      properties:
+        request:
+          type: integer
+        status:
+          type: string
+        thread:
+          type: integer
+        duration:
+          type: integer
+        error:
+          type: string
+        config:
+          $ref: '#/components/schemas/StressConfig'
+    Report:
+      required:
+      - config
+      - data
+      - duration
+      - stats
+      - uuid
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        config:
+          $ref: '#/components/schemas/StressConfig'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataItem'
+    AppResponse:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Report'
+        error:
+          type: string
+    AppError:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: string
+            nullable: true
+        error:
+          type: string
