@@ -9,7 +9,7 @@
     "@material-ui/core": "^3.9.0",
     "@material-ui/icons": "^3.0.2",
     "@material-ui/lab": "^3.0.0-alpha.30",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "babel-plugin-css-modules-transform": "^1.6.2",
     "babelify": "^10.0.0",
     "chart.js": "^2.7.3",
